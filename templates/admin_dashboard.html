@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body { font-family: sans-serif; background: #282c34; color: #fff; text-align: center; margin: 0; padding: 20px; }
+        .admin-header { background: linear-gradient(to right, #6a11cb, #2575fc); padding: 40px 20px; border-radius: 10px; margin-bottom: 20px; }
+        .admin-header h1 { margin: 0; font-size: 2.5em; }
+        .admin-header p { margin: 5px 0 0; }
+        .nav-buttons { display: flex; flex-direction: column; gap: 15px; max-width: 400px; margin: 0 auto; }
+        .nav-buttons a {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        .nav-buttons a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>🔑 Admin Panel</h1>
+        <p>Complete Media Database Management</p>
+    </div>
+    <div class="nav-buttons">
+        <a href="/">Home</a>
+        <a href="/admin/add_movie">Add Movie</a>
+        <a href="/admin/add_tv">Add TV Series</a>
+        <a href="/admin/search_and_edit">Search & Edit</a>
+        <a href="/api/media">Public API</a>
+        <a href="/api/docs">API Docs</a>
+    </div>
+</body>
+</html>

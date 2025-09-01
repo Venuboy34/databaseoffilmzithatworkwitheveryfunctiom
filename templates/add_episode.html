@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Episode</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
+        h1 { text-align: center; }
+        form div { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        textarea { height: 100px; }
+        .button-group { display: flex; gap: 10px; }
+        button { padding: 10px 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Add Episode for "{{ media.title }}"</h1>
+    <form id="add-episode-form">
+        <div>
+            <label for="season_number">Season Number:</label>
+            <input type="number" id="season_number" name="season_number" required>
+        </div>
+        <div>
+            <label for="episode_number">Episode Number:</label>
+            <input type="number" id="episode_number" name="episode_number" required>
+        </div>
+        <div>
+            <label for="episode_name">Episode Name:</label>
+            <input type="text" id="episode_name" name="episode_name" required>
+        </div>
+        <div>
+            <label for="video_links">Video Links (JSON):</label>
+            <textarea id="video_links" name="video_links"></textarea>
+        </div>
+        <div>
+            <label for="download_links">Download Links (JSON):</label>
+            <textarea id="download_links" name="download_links"></textarea>
+        </div>
+        <div class="button-group">
+            <button type="submit">Save Episode</button>
+            <a href="/admin/search">Cancel</a>
+        </div>
+    </form>
+    <script>
+        document.getElementById('add-episode-form').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const mediaId = "{{ media.id }}";
+            const data = {
+                season_number: parseInt(formData.get('season_number')),
+                episode_number: parseInt(formData.get('episode_number')),
+                episode_name: formData.get('episode_name'),
+                video_links: JSON.parse(formData.get('video_links') || '{}'),
+                download_links: JSON.parse(formData.get('download_links') || '{}')
+            };
+
+            try {
+                const response = await fetch(`/admin/update_episode/${mediaId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('venura:venura')
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    alert('Episode saved successfully!');
+                    window.location.href = `/admin/edit/${mediaId}`;
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('An unexpected error occurred.');
+            }
+        });
+    </script>
+</body>
+</html>

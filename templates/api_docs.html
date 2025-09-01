@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Docs</title>
+    <style>
+        body { font-family: sans-serif; background: #282c34; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1, h2, h3 { color: #6a11cb; }
+        .endpoint { background: #3b404a; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .endpoint h3 { margin-top: 0; }
+        .method { font-weight: bold; background: #555; padding: 5px 10px; border-radius: 5px; display: inline-block; color: #fff; }
+        .url { font-family: monospace; background: #4a505b; padding: 5px 10px; border-radius: 5px; color: #fff; }
+        pre { background: #1c1f24; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .protected-note { color: #ffcc00; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Docs</h1>
+        <p>This document provides an overview of the RESTful API endpoints for the Flask Movie & TV Database.</p>
+        
+        <hr>
+        
+        <h2>Public Endpoints</h2>
+        <p>These endpoints are publicly accessible and do not require authentication.</p>
+
+        <div class="endpoint">
+            <h3>Get All Media</h3>
+            <span class="method">GET</span> <span class="url">/api/media</span>
+            <p>Retrieves a list of all movies and TV shows in the database.</p>
+            <h4>Response Example:</h4>
+            <pre>[
+  {
+    "id": 1,
+    "type": "movie",
+    "title": "Inception",
+    "release_date": "2010-07-16",
+    ...
+  },
+  {
+    "id": 2,
+    "type": "tv",
+    "title": "Breaking Bad",
+    "release_date": "2008-01-20",
+    ...
+  }
+]</pre>
+        </div>
+
+        <div class="endpoint">
+            <h3>Get Single Media Item</h3>
+            <span class="method">GET</span> <span class="url">/api/media/&lt;id&gt;</span>
+            <p>Retrieves a single movie or TV show by its unique ID.</p>
+            <h4>Path Parameters:</h4>
+            <ul>
+                <li><code>id</code> (integer): The unique ID of the media item.</li>
+            </ul>
+            <h4>Response Example (Movie):</h4>
+            <pre>{
+  "id": 1,
+  "type": "movie",
+  "title": "Inception",
+  ...
+  "video_links": {
+    "video_1080p": "https://example.com/movie_1080p.mp4"
+  }
+}</pre>
+        </div>
+
+        <hr>
+
+        <h2>Protected Endpoints</h2>
+        <p>These endpoints require <strong style="color:red">Basic Authentication</strong>. Use the credentials: <strong><code>venura</code> / <code>venura</code></strong></p>
+        
+        <div class="endpoint">
+            <h3>Add New Media</h3>
+            <span class="method">POST</span> <span class="url">/api/admin/media</span>
+            <p>Adds a new movie or TV show to the database.</p>
+            <p class="protected-note">Requires Basic Auth.</p>
+            <h4>Request Body:</h4>
+            <p>JSON object containing all media details (see example formats).</p>
+        </div>
+
+        <div class="endpoint">
+            <h3>Update Media</h3>
+            <span class="method">PUT</span> <span class="url">/api/admin/media/&lt;id&gt;</span>
+            <p>Updates an existing media item by its unique ID.</p>
+            <p class="protected-note">Requires Basic Auth.</p>
+            <h4>Path Parameters:</h4>
+            <ul>
+                <li><code>id</code> (integer): The unique ID of the media item to update.</li>
+            </ul>
+            <h4>Request Body:</h4>
+            <p>JSON object with updated media details.</p>
+        </div>
+
+        <div class="endpoint">
+            <h3>Delete Media</h3>
+            <span class="method">DELETE</span> <span class="url">/api/admin/media/&lt;id&gt;</span>
+            <p>Deletes a media item from the database by its unique ID.</p>
+            <p class="protected-note">Requires Basic Auth.</p>
+            <h4>Path Parameters:</h4>
+            <ul>
+                <li><code>id</code> (integer): The unique ID of the media item to delete.</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

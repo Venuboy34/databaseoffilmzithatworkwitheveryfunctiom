@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Media</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1c1c1e;
+            color: #f0f0f0;
+            padding: 20px;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #2c2c2e;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Header */
+        h1 {
+            text-align: center;
+            color: #e0e0e0;
+            border-bottom: 2px solid #3a3a3c;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* Form Elements */
+        .form-section {
+            background: #3a3a3c;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #b0b0b0;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"], textarea {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background: #4a4a4c;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 6px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, textarea:focus {
+            border-color: #6a11cb;
+            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.3);
+            outline: none;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Buttons */
+        .btn-primary, .btn-secondary {
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: transform 0.2s, background-color 0.2s;
+            text-transform: uppercase;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+            color: #fff;
+            width: 100%;
+            margin-top: 20px;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: #555;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #666;
+            transform: translateY(-2px);
+        }
+
+        .remove-btn {
+            background: #ff4d4d;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .remove-btn:hover {
+            background: #e60000;
+        }
+
+        /* TV Series Specific Styles */
+        .season-container {
+            border: 1px dashed #555;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            background-color: #2c2c2e;
+        }
+        
+        .episode-container {
+            margin-top: 15px;
+            padding-left: 20px;
+            border-left: 2px solid #6a11cb;
+        }
+
+        .episode-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .episode-row input {
+            flex-grow: 1;
+        }
+
+        /* Utility */
+        .error-message {
+            text-align: center;
+            color: #ff4d4d;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 30px;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✏️ Edit Media</h1>
+        
+        <div id="loading-error" class="error-message" style="display: none;">
+            Error: Cannot load media. Please ensure the ID is valid and the backend is running.
+        </div>
+        
+        <form id="edit-media-form">
+            <input type="hidden" id="media-id" name="id">
+            
+            <div class="form-section">
+                <h2>Media Details</h2>
+                <div class="form-group">
+                    <label for="type">Media Type:</label>
+                    <input type="text" id="type" name="type" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="thumbnail">Thumbnail URL:</label>
+                    <input type="text" id="thumbnail" name="thumbnail">
+                </div>
+                <div class="form-group">
+                    <label for="release_date">Release Date:</label>
+                    <input type="date" id="release_date" name="release_date">
+                </div>
+                <div class="form-group">
+                    <label for="language">Language:</label>
+                    <input type="text" id="language" name="language">
+                </div>
+                <div class="form-group">
+                    <label for="rating">Rating:</label>
+                    <input type="number" step="0.1" id="rating" name="rating">
+                </div>
+                <div class="form-group">
+                    <label for="genres">Genres (comma-separated):</label>
+                    <input type="text" id="genres" name="genres">
+                </div>
+                <div class="form-group">
+                    <label for="cast_members">Cast (JSON):</label>
+                    <textarea id="cast_members" name="cast_members"></textarea>
+                </div>
+            </div>
+            
+            <div id="dynamic-fields"></div>
+
+            <button type="submit" class="btn-primary">Update Media</button>
+        </form>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin + '/api/media';
+        const ADMIN_API_BASE_URL = window.location.origin + '/api/admin';
+        const AUTH_HEADER = 'Basic ' + btoa('venura:venura');
+        let seasonNumberCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mediaId = urlParams.get('id');
+            if (!mediaId) {
+                document.getElementById('loading-error').style.display = 'block';
+                return;
+            }
+            document.getElementById('media-id').value = mediaId;
+            await loadMediaData(mediaId);
+        });
+
+        async function loadMediaData(id) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/${id}`);
+                if (!response.ok) {
+                    throw new Error('Media not found.');
+                }
+                const media = await response.json();
+                populateForm(media);
+            } catch (err) {
+                console.error("Failed to load media:", err);
+                document.getElementById('loading-error').style.display = 'block';
+                // Redirect after a short delay to give user time to see the error
+                setTimeout(() => {
+                     window.location.href = '/admin/search_and_edit';
+                }, 3000);
+            }
+        }
+
+        function populateForm(media) {
+            document.getElementById('type').value = media.type || '';
+            document.getElementById('title').value = media.title || '';
+            document.getElementById('description').value = media.description || '';
+            document.getElementById('thumbnail').value = media.thumbnail || '';
+            document.getElementById('release_date').value = media.release_date || '';
+            document.getElementById('language').value = media.language || '';
+            document.getElementById('rating').value = media.rating || '';
+            
+            // Handle genres
+            document.getElementById('genres').value = (media.genres && Array.isArray(media.genres)) ? media.genres.join(', ') : '';
+
+            // Handle cast_members JSON
+            try {
+                document.getElementById('cast_members').value = JSON.stringify(media.cast_members || [], null, 2);
+            } catch (e) {
+                document.getElementById('cast_members').value = '[]';
+            }
+
+            const dynamicFieldsContainer = document.getElementById('dynamic-fields');
+            dynamicFieldsContainer.innerHTML = '';
+
+            if (media.type === 'movie') {
+                dynamicFieldsContainer.innerHTML = `
+                    <div class="form-section">
+                        <h2>🔗 Video & Download Links</h2>
+                        <div class="form-group">
+                            <label for="video_720p">Video 720p URL:</label>
+                            <input type="text" id="video_720p" name="video_720p">
+                        </div>
+                        <div class="form-group">
+                            <label for="video_1080p">Video 1080p URL:</label>
+                            <input type="text" id="video_1080p" name="video_1080p">
+                        </div>
+                        <div class="form-group">
+                            <label for="video_2160p">Video 2160p URL:</label>
+                            <input type="text" id="video_2160p" name="video_2160p">
+                        </div>
+                        <hr style="border-color: #555; margin: 20px 0;">
+                        <div class="form-group">
+                            <label for="download_720p">Download 720p URL:</label>
+                            <input type="text" id="download_720p" name="download_720p">
+                        </div>
+                        <div class="form-group">
+                            <label for="download_1080p">Download 1080p URL:</label>
+                            <input type="text" id="download_1080p" name="download_1080p">
+                        </div>
+                        <div class="form-group">
+                            <label for="download_2160p">Download 2160p URL:</label>
+                            <input type="text" id="download_2160p" name="download_2160p">
+                        </div>
+                    </div>
+                `;
+
+                // Populate movie fields safely
+                if (media.video_links && typeof media.video_links === 'object') {
+                    document.getElementById('video_720p').value = media.video_links.video_720p || '';
+                    document.getElementById('video_1080p').value = media.video_links.video_1080p || '';
+                    document.getElementById('video_2160p').value = media.video_links.video_2160p || '';
+                }
+
+                if (media.download_links && typeof media.download_links === 'object') {
+                    document.getElementById('download_720p').value = 
+                        (media.download_links.download_720p && media.download_links.download_720p.url) || '';
+                    document.getElementById('download_1080p').value = 
+                        (media.download_links.download_1080p && media.download_links.download_1080p.url) || '';
+                    document.getElementById('download_2160p').value = 
+                        (media.download_links.download_2160p && media.download_links.download_2160p.url) || '';
+                }
+            } else if (media.type === 'tv') {
+                dynamicFieldsContainer.innerHTML = `
+                    <div class="form-section">
+                        <h2>TV Series Details</h2>
+                        <div class="form-group">
+                            <label for="total_seasons">Total Seasons:</label>
+                            <input type="number" id="total_seasons" name="total_seasons" value="${media.total_seasons || 0}">
+                        </div>
+                        <div id="seasons-container"></div>
+                        <button type="button" class="btn-secondary" onclick="addSeason()">Add New Season</button>
+                    </div>
+                `;
+                
+                // Populate TV series seasons
+                if (media.seasons && typeof media.seasons === 'object') {
+                    const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
+                        const aNum = parseInt(a.split('_')[1]) || 0;
+                        const bNum = parseInt(b.split('_')[1]) || 0;
+                        return aNum - bNum;
+                    });
+                    seasonKeys.forEach(key => {
+                        const season = media.seasons[key];
+                        if (season) {
+                            addSeason(season);
+                        }
+                    });
+                }
+            }
+        }
+
+        function addSeason(seasonData = null) {
+            seasonNumberCounter++;
+            const container = document.getElementById('seasons-container');
+            const seasonDiv = document.createElement('div');
+            seasonDiv.classList.add('season-container');
+            const seasonNumber = seasonData ? seasonData.season_number : seasonNumberCounter;
+            seasonDiv.innerHTML = `
+                <h3>Season ${seasonNumber} <button type="button" class="remove-btn" onclick="removeSeason(this)">Remove</button></h3>
+                <div class="form-group">
+                    <label>Episodes</label>
+                    <div class="episode-container" data-season-number="${seasonNumber}"></div>
+                </div>
+                <button type="button" class="btn-secondary" onclick="addEpisode(this)">+ Add Episode</button>
+            `;
+            container.appendChild(seasonDiv);
+            
+            // Add episodes if they exist
+            if (seasonData && seasonData.episodes && Array.isArray(seasonData.episodes)) {
+                seasonData.episodes.forEach(episode => {
+                    addEpisode(seasonDiv.querySelector('.btn-secondary'), episode);
+                });
+            }
+        }
+
+        function removeSeason(button) {
+            button.closest('.season-container').remove();
+        }
+
+        function addEpisode(button, episodeData = null) {
+            const episodeContainer = button.previousElementSibling.querySelector('.episode-container');
+            const seasonNumber = episodeContainer.dataset.seasonNumber;
+            const episodeCount = episodeContainer.children.length + 1;
+            const episodeDiv = document.createElement('div');
+            episodeDiv.classList.add('episode-row');
+            
+            const episodeName = episodeData ? (episodeData.episode_name || '') : '';
+            const videoLink = episodeData ? (episodeData.video_720p || '') : '';
+            const downloadLink = episodeData ? 
+                (episodeData.download_720p && episodeData.download_720p.url ? episodeData.download_720p.url : '') : '';
+            
+            episodeDiv.innerHTML = `
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required>
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video" placeholder="Video Link" value="${videoLink}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download" placeholder="Download Link" value="${downloadLink}">
+                <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
+            `;
+            episodeContainer.appendChild(episodeDiv);
+        }
+
+        function removeEpisode(button) {
+            button.closest('.episode-row').remove();
+        }
+
+        // Enhanced form submission with robust error handling
+        document.getElementById('edit-media-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const mediaId = document.getElementById('media-id').value;
+            const mediaType = document.getElementById('type').value;
+
+            // Add loading state
+            form.classList.add('loading');
+            const submitButton = form.querySelector('.btn-primary');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = 'Updating...';
+
+            // Validate required fields
+            if (!mediaId || !mediaType || !form.title.value.trim()) {
+                alert('Media ID, type, and title are required.');
+                form.classList.remove('loading');
+                submitButton.textContent = originalText;
+                return;
+            }
+
+            // Validate and parse cast_members JSON
+            let castMembers = [];
+            try {
+                const castText = form.cast_members.value.trim();
+                if (castText) {
+                    castMembers = JSON.parse(castText);
+                    if (!Array.isArray(castMembers)) {
+                        throw new Error('Cast members must be an array');
+                    }
+                }
+            } catch (e) {
+                alert('Invalid JSON format in Cast members field. Please check the format.');
+                form.classList.remove('loading');
+                submitButton.textContent = originalText;
+                return;
+            }
+
+            // Get and process genres
+            const genresInput = form.genres.value.trim();
+            const genresArray = genresInput ? genresInput.split(',').map(g => g.trim()) : [];
+            
+            // Build base data object
+            const data = {
+                type: mediaType,
+                title: form.title.value.trim(),
+                description: form.description.value.trim() || null,
+                thumbnail: form.thumbnail.value.trim() || null,
+                release_date: form.release_date.value || null,
+                language: form.language.value.trim() || null,
+                rating: form.rating.value ? parseFloat(form.rating.value) : null,
+                genres: genresArray, // Add genres here
+                cast_members: castMembers
+            };
+
+            // Handle movie-specific fields
+            if (mediaType === 'movie') {
+                const video720p = form.video_720p ? form.video_720p.value.trim() : '';
+                const video1080p = form.video_1080p ? form.video_1080p.value.trim() : '';
+                const video2160p = form.video_2160p ? form.video_2160p.value.trim() : '';
+                const download720p = form.download_720p ? form.download_720p.value.trim() : '';
+                const download1080p = form.download_1080p ? form.download_1080p.value.trim() : '';
+                const download2160p = form.download_2160p ? form.download_2160p.value.trim() : '';
+
+                data.video_links = {
+                    video_720p: video720p || null,
+                    video_1080p: video1080p || null,
+                    video_2160p: video2160p || null
+                };
+                
+                data.download_links = {
+                    download_720p: download720p ? { url: download720p, file_type: 'webrip' } : null,
+                    download_1080p: download1080p ? { url: download1080p, file_type: 'webrip' } : null,
+                    download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null
+                };
+                
+                data.total_seasons = null;
+                data.seasons = null;
+                
+            } else if (mediaType === 'tv') {
+                const seasons = {};
+                const seasonContainers = document.querySelectorAll('.season-container');
+                let seasonCounter = 1;
+                
+                seasonContainers.forEach((seasonDiv) => {
+                    const episodes = [];
+                    const episodeRows = seasonDiv.querySelectorAll('.episode-row');
+                    
+                    episodeRows.forEach((row, index) => {
+                        const episodeNumber = index + 1;
+                        const nameInput = row.querySelector(`input[placeholder="Episode Name"]`);
+                        const videoInput = row.querySelector(`input[placeholder="Video Link"]`);
+                        const downloadInput = row.querySelector(`input[placeholder="Download Link"]`);
+                        
+                        const name = nameInput ? nameInput.value.trim() : '';
+                        const video = videoInput ? videoInput.value.trim() : '';
+                        const download = downloadInput ? downloadInput.value.trim() : '';
+                        
+                        if (name) { // Only add episodes with names
+                            episodes.push({
+                                episode_number: episodeNumber,
+                                episode_name: name,
+                                video_720p: video || null,
+                                download_720p: download ? { url: download, file_type: 'webrip' } : null
+                            });
+                        }
+                    });
+                    
+                    if (episodes.length > 0) { // Only add seasons with episodes
+                        seasons[`season_${seasonCounter}`] = {
+                            season_number: seasonCounter,
+                            total_episodes: episodes.length,
+                            episodes: episodes
+                        };
+                        seasonCounter++;
+                    }
+                });
+                
+                data.total_seasons = Object.keys(seasons).length;
+                data.seasons = Object.keys(seasons).length > 0 ? seasons : null;
+                data.video_links = null;
+                data.download_links = null;
+            }
+
+            // Final validation
+            if (!data.title) {
+                alert('Title is required.');
+                form.classList.remove('loading');
+                submitButton.textContent = originalText;
+                return;
+            }
+
+            try {
+                console.log('Sending data:', JSON.stringify(data, null, 2)); // Debug log
+                
+                const response = await fetch(`${ADMIN_API_BASE_URL}/media/${mediaId}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': AUTH_HEADER 
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                let result;
+                try {
+                    result = await response.json();
+                } catch (jsonError) {
+                    console.error('Failed to parse response as JSON:', jsonError);
+                    result = { error: 'Server returned invalid response' };
+                }
+                
+                if (response.ok) {
+                    alert('Media updated successfully!');
+                    window.location.href = '/admin/search_and_edit';
+                } else {
+                    console.error('Server response status:', response.status);
+                    console.error('Server response:', result);
+                    alert(`Error ${response.status}: ${result.message || result.error || 'Unknown server error'}`);
+                }
+            } catch (err) {
+                console.error('Network error:', err);
+                alert('Network error: Unable to connect to server. Please check your connection and try again.');
+            } finally {
+                // Remove loading state
+                form.classList.remove('loading');
+                submitButton.textContent = originalText;
+            }
+        });
+    </script>
+</body>
+</html>

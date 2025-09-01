@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Media Database</title>
+    <style>
+        body { font-family: sans-serif; background: #1a1e24; color: #fff; text-align: center; margin: 0; padding: 0; }
+        .header { background: #3b404a; padding: 20px; border-bottom: 2px solid #555; }
+        .header h1 { margin: 0; font-size: 2em; }
+        .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; padding: 20px; }
+        .media-item { background: #282c34; padding: 10px; border-radius: 8px; text-align: left; }
+        .media-item img { max-width: 100%; height: auto; border-radius: 5px; }
+        .media-item h3 { margin: 10px 0 5px; font-size: 1em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .media-item p { margin: 0; font-size: 0.8em; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Media Database</h1>
+    </div>
+    <div class="media-grid" id="media-grid">
+        </div>
+
+    <script>
+        const API_URL = window.location.origin + '/api/media';
+
+        document.addEventListener('DOMContentLoaded', fetchAllMedia);
+
+        async function fetchAllMedia() {
+            try {
+                const response = await fetch(API_URL);
+                if (response.ok) {
+                    const media = await response.json();
+                    displayMedia(media);
+                } else {
+                    console.error('Failed to fetch media:', response.statusText);
+                }
+            } catch (error) {
+                console.error('An error occurred:', error);
+            }
+        }
+
+        function displayMedia(media) {
+            const grid = document.getElementById('media-grid');
+            grid.innerHTML = '';
+            media.forEach(item => {
+                const mediaDiv = document.createElement('div');
+                mediaDiv.classList.add('media-item');
+                mediaDiv.innerHTML = `
+                    <img src="${item.thumbnail}" alt="${item.title}">
+                    <h3>${item.title}</h3>
+                    <p>${item.type === 'movie' ? 'Movie' : 'TV Series'}</p>
+                    <p>⭐ ${item.rating}</p>
+                `;
+                grid.appendChild(mediaDiv);
+            });
+        }
+    </script>
+</body>
+</html>
