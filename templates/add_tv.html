@@ -14,7 +14,8 @@
         .btn-secondary { background: #555; color: #fff; border: none; padding: 10px 15px; cursor: pointer; border-radius: 5px; }
         .season-container { border: 1px solid #555; padding: 15px; border-radius: 8px; margin-top: 20px; }
         .episode-container { margin-top: 10px; padding-left: 20px; border-left: 2px solid #555; }
-        .episode-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .episode-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .episode-row input { flex: 1; min-width: 150px; }
         .remove-btn { background: #ff4d4d; color: #fff; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
@@ -100,8 +101,12 @@
             episodeDiv.classList.add('episode-row');
             episodeDiv.innerHTML = `
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode ${episodeCount} Name" required>
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video" placeholder="Video Link">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download" placeholder="Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link">
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
@@ -150,22 +155,33 @@
 
             for (let i = 1; i <= totalSeasons; i++) {
                 const episodes = [];
-                const episodeInputs = document.querySelectorAll(`[name^="season_${i}_episode_"]`);
+                const episodeInputs = document.querySelectorAll(`.episode-container[data-season-number="${i}"] .episode-row`);
                 
-                // Group the episode inputs together (name, video, download)
-                for (let j = 0; j < episodeInputs.length; j += 3) {
-                    const episodeNumber = (j / 3) + 1;
-                    const name = formData.get(`season_${i}_episode_${episodeNumber}_name`);
-                    const video = formData.get(`season_${i}_episode_${episodeNumber}_video`);
-                    const download = formData.get(`season_${i}_episode_${episodeNumber}_download`);
+                episodeInputs.forEach((episodeRow, index) => {
+                    const episodeNumber = index + 1;
+                    const episodeName = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_name"]`).value;
+                    
+                    const video720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_720p"]`).value;
+                    const download720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_720p"]`).value;
+                    
+                    const video1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_1080p"]`).value;
+                    const download1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_1080p"]`).value;
+                    
+                    const video2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_2160p"]`).value;
+                    const download2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_2160p"]`).value;
 
                     episodes.push({
                         episode_number: episodeNumber,
-                        episode_name: name,
-                        video_720p: video,
-                        download_720p: { url: download, file_type: 'webrip' }
+                        episode_name: episodeName,
+                        video_720p: video720p,
+                        download_720p: { url: download720p, file_type: 'webrip' },
+                        video_1080p: video1080p,
+                        download_1080p: { url: download1080p, file_type: 'webrip' },
+                        video_2160p: video2160p,
+                        download_2160p: { url: download2160p, file_type: 'webrip' }
                     });
-                }
+                });
+
                 seasons[`season_${i}`] = {
                     season_number: i,
                     total_episodes: episodes.length,
