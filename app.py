@@ -80,6 +80,12 @@ def fetch_tmdb_data(tmdb_id, media_type):
                 "image": f"https://image.tmdb.org/t/p/original{member.get('profile_path')}" if member.get('profile_path') else None
             })
         
+        # Add 1080p and 2160p video links
+        video_links = {}
+        if media_type == 'tv':
+            video_links['1080p'] = f"https://example.com/tv/{tmdb_id}/1080p"  # Placeholder URL
+            video_links['2160p'] = f"https://example.com/tv/{tmdb_id}/2160p"  # Placeholder URL
+
         processed_data = {
             'title': data.get('title') if media_type == 'movie' else data.get('name'),
             'description': data.get('overview'),
@@ -89,7 +95,8 @@ def fetch_tmdb_data(tmdb_id, media_type):
             'rating': data.get('vote_average'),
             'cast_members': cast,
             'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
-            'genres': [g['name'] for g in data.get('genres', [])] # Extract genres
+            'genres': [g['name'] for g in data.get('genres', [])], # Extract genres
+            'video_links': video_links
         }
         
         return processed_data
