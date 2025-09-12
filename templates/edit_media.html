@@ -139,6 +139,7 @@
 
         .episode-row {
             display: flex;
+            flex-wrap: wrap;
             gap: 15px;
             align-items: center;
             margin-bottom: 10px;
@@ -146,6 +147,7 @@
         
         .episode-row input {
             flex-grow: 1;
+            min-width: 150px;
         }
 
         /* Utility */
@@ -390,14 +392,24 @@
             episodeDiv.classList.add('episode-row');
             
             const episodeName = episodeData ? (episodeData.episode_name || '') : '';
-            const videoLink = episodeData ? (episodeData.video_720p || '') : '';
-            const downloadLink = episodeData ? 
+            const video720p = episodeData ? (episodeData.video_720p || '') : '';
+            const download720p = episodeData ? 
                 (episodeData.download_720p && episodeData.download_720p.url ? episodeData.download_720p.url : '') : '';
+            const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
+            const download1080p = episodeData ? 
+                (episodeData.download_1080p && episodeData.download_1080p.url ? episodeData.download_1080p.url : '') : '';
+            const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
+            const download2160p = episodeData ? 
+                (episodeData.download_2160p && episodeData.download_2160p.url ? episodeData.download_2160p.url : '') : '';
             
             episodeDiv.innerHTML = `
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required>
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video" placeholder="Video Link" value="${videoLink}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download" placeholder="Download Link" value="${downloadLink}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link" value="${video720p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link" value="${download720p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link" value="${video1080p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link" value="${download1080p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link" value="${video2160p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link" value="${download2160p}">
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
@@ -458,7 +470,7 @@
                 release_date: form.release_date.value || null,
                 language: form.language.value.trim() || null,
                 rating: form.rating.value ? parseFloat(form.rating.value) : null,
-                genres: genresArray, // Add genres here
+                genres: genresArray,
                 cast_members: castMembers
             };
 
@@ -472,15 +484,15 @@
                 const download2160p = form.download_2160p ? form.download_2160p.value.trim() : '';
 
                 data.video_links = {
-                    video_720p: video720p || null,
-                    video_1080p: video1080p || null,
-                    video_2160p: video2160p || null
+                    '720p': video720p || null,
+                    '1080p': video1080p || null,
+                    '2160p': video2160p || null
                 };
                 
                 data.download_links = {
-                    download_720p: download720p ? { url: download720p, file_type: 'webrip' } : null,
-                    download_1080p: download1080p ? { url: download1080p, file_type: 'webrip' } : null,
-                    download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null
+                    '720p': download720p ? { url: download720p, file_type: 'webrip' } : null,
+                    '1080p': download1080p ? { url: download1080p, file_type: 'webrip' } : null,
+                    '2160p': download2160p ? { url: download2160p, file_type: 'webrip' } : null
                 };
                 
                 data.total_seasons = null;
@@ -497,20 +509,27 @@
                     
                     episodeRows.forEach((row, index) => {
                         const episodeNumber = index + 1;
-                        const nameInput = row.querySelector(`input[placeholder="Episode Name"]`);
-                        const videoInput = row.querySelector(`input[placeholder="Video Link"]`);
-                        const downloadInput = row.querySelector(`input[placeholder="Download Link"]`);
+                        const episodeName = row.querySelector(`input[placeholder="Episode Name"]`)?.value.trim() || '';
                         
-                        const name = nameInput ? nameInput.value.trim() : '';
-                        const video = videoInput ? videoInput.value.trim() : '';
-                        const download = downloadInput ? downloadInput.value.trim() : '';
+                        const video720p = row.querySelector(`input[placeholder="720p Video Link"]`)?.value.trim() || '';
+                        const download720p = row.querySelector(`input[placeholder="720p Download Link"]`)?.value.trim() || '';
                         
-                        if (name) { // Only add episodes with names
+                        const video1080p = row.querySelector(`input[placeholder="1080p Video Link"]`)?.value.trim() || '';
+                        const download1080p = row.querySelector(`input[placeholder="1080p Download Link"]`)?.value.trim() || '';
+                        
+                        const video2160p = row.querySelector(`input[placeholder="2160p Video Link"]`)?.value.trim() || '';
+                        const download2160p = row.querySelector(`input[placeholder="2160p Download Link"]`)?.value.trim() || '';
+                        
+                        if (episodeName) { // Only add episodes with names
                             episodes.push({
                                 episode_number: episodeNumber,
-                                episode_name: name,
-                                video_720p: video || null,
-                                download_720p: download ? { url: download, file_type: 'webrip' } : null
+                                episode_name: episodeName,
+                                video_720p: video720p || null,
+                                download_720p: download720p ? { url: download720p, file_type: 'webrip' } : null,
+                                video_1080p: video1080p || null,
+                                download_1080p: download1080p ? { url: download1080p, file_type: 'webrip' } : null,
+                                video_2160p: video2160p || null,
+                                download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null
                             });
                         }
                     });
@@ -540,8 +559,6 @@
             }
 
             try {
-                console.log('Sending data:', JSON.stringify(data, null, 2)); // Debug log
-                
                 const response = await fetch(`${ADMIN_API_BASE_URL}/media/${mediaId}`, {
                     method: 'PUT',
                     headers: { 
@@ -555,7 +572,6 @@
                 try {
                     result = await response.json();
                 } catch (jsonError) {
-                    console.error('Failed to parse response as JSON:', jsonError);
                     result = { error: 'Server returned invalid response' };
                 }
                 
@@ -563,15 +579,11 @@
                     alert('Media updated successfully!');
                     window.location.href = '/admin/search_and_edit';
                 } else {
-                    console.error('Server response status:', response.status);
-                    console.error('Server response:', result);
                     alert(`Error ${response.status}: ${result.message || result.error || 'Unknown server error'}`);
                 }
             } catch (err) {
-                console.error('Network error:', err);
                 alert('Network error: Unable to connect to server. Please check your connection and try again.');
             } finally {
-                // Remove loading state
                 form.classList.remove('loading');
                 submitButton.textContent = originalText;
             }
