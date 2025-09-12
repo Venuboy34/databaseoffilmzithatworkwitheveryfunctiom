@@ -5,14 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Episode</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; }
-        h1 { text-align: center; }
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: auto; background: #282c34; color: #fff;}
+        h1 { text-align: center; color: #fff;}
         form div { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; }
-        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #fff;}
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 8px; box-sizing: border-box; background: #4a505b; border: 1px solid #555; color: #fff; border-radius: 5px;}
         textarea { height: 100px; }
-        .button-group { display: flex; gap: 10px; }
-        button { padding: 10px 15px; cursor: pointer; }
+        .button-group { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;}
+        button { padding: 10px 15px; cursor: pointer; background: #6a11cb; color: #fff; border: none; border-radius: 5px; font-size: 16px;}
+        button:hover { background: #2575fc; }
+        a {
+            display: inline-block;
+            padding: 10px 15px;
+            background: #555;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+        a:hover { background: #666; }
     </style>
 </head>
 <body>
@@ -30,52 +42,95 @@
             <label for="episode_name">Episode Name:</label>
             <input type="text" id="episode_name" name="episode_name" required>
         </div>
+        
         <div>
-            <label for="video_links">Video Links (JSON):</label>
-            <textarea id="video_links" name="video_links"></textarea>
+            <label for="video_720p">720p Video Link:</label>
+            <input type="text" id="video_720p" name="video_720p">
         </div>
         <div>
-            <label for="download_links">Download Links (JSON):</label>
-            <textarea id="download_links" name="download_links"></textarea>
+            <label for="video_1080p">1080p Video Link:</label>
+            <input type="text" id="video_1080p" name="video_1080p">
         </div>
+        <div>
+            <label for="video_2160p">2160p Video Link:</label>
+            <input type="text" id="video_2160p" name="video_2160p">
+        </div>
+
+        <div>
+            <label for="download_720p">720p Download Link:</label>
+            <input type="text" id="download_720p" name="download_720p">
+        </div>
+        <div>
+            <label for="download_1080p">1080p Download Link:</label>
+            <input type="text" id="download_1080p" name="download_1080p">
+        </div>
+        <div>
+            <label for="download_2160p">2160p Download Link:</label>
+            <input type="text" id="download_2160p" name="download_2160p">
+        </div>
+
         <div class="button-group">
             <button type="submit">Save Episode</button>
-            <a href="/admin/search">Cancel</a>
+            <a href="/admin/search_and_edit">Cancel</a>
         </div>
     </form>
     <script>
-        document.getElementById('add-episode-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const mediaId = "{{ media.id }}";
-            const data = {
-                season_number: parseInt(formData.get('season_number')),
-                episode_number: parseInt(formData.get('episode_number')),
-                episode_name: formData.get('episode_name'),
-                video_links: JSON.parse(formData.get('video_links') || '{}'),
-                download_links: JSON.parse(formData.get('download_links') || '{}')
-            };
-
-            try {
-                const response = await fetch(`/admin/update_episode/${mediaId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Basic ' + btoa('venura:venura')
-                    },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-                if (response.ok) {
-                    alert('Episode saved successfully!');
-                    window.location.href = `/admin/edit/${mediaId}`;
-                } else {
-                    alert('Error: ' + result.message);
-                }
-            } catch (error) {
-                alert('An unexpected error occurred.');
+        document.addEventListener('DOMContentLoaded', () => {
+            // Extract media ID from the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const mediaId = urlParams.get('media_id');
+            if (!mediaId) {
+                alert('Media ID not found in URL.');
+                return;
             }
+
+            // You might want to fetch media details here to display the title
+            // For now, we'll assume '{{ media.title }}' is populated by the server.
+
+            document.getElementById('add-episode-form').addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const form = event.target;
+                const formData = new FormData(form);
+
+                const videoLinks = {};
+                if (formData.get('video_720p')) videoLinks['720p'] = formData.get('video_720p');
+                if (formData.get('video_1080p')) videoLinks['1080p'] = formData.get('video_1080p');
+                if (formData.get('video_2160p')) videoLinks['2160p'] = formData.get('video_2160p');
+
+                const downloadLinks = {};
+                if (formData.get('download_720p')) downloadLinks['720p'] = { url: formData.get('download_720p'), file_type: 'webrip' };
+                if (formData.get('download_1080p')) downloadLinks['1080p'] = { url: formData.get('download_1080p'), file_type: 'webrip' };
+                if (formData.get('download_2160p')) downloadLinks['2160p'] = { url: formData.get('download_2160p'), file_type: 'webrip' };
+
+                const data = {
+                    season_number: parseInt(formData.get('season_number')),
+                    episode_number: parseInt(formData.get('episode_number')),
+                    episode_name: formData.get('episode_name'),
+                    video_links: videoLinks,
+                    download_links: downloadLinks
+                };
+
+                try {
+                    // Assuming the endpoint for updating episodes is /api/admin/media/<media_id>/episode
+                    const response = await fetch(`/api/admin/media/${mediaId}/episode`, {
+                        method: 'POST', // Or PUT, depending on your API for adding/updating episodes
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Basic ' + btoa('venura:venura')
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (response.ok) {
+                        alert('Episode saved successfully!');
+                        window.location.href = `/admin/edit?id=${mediaId}`; // Redirect back to edit media page
+                    } else {
+                        alert('Error: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('An unexpected error occurred: ' + error.message);
+                }
+            });
         });
     </script>
 </body>
