@@ -89,6 +89,20 @@
                 <input type="text" id="download_2160p" name="download_2160p">
             </div>
 
+            <h2>🧲 Torrent Links</h2>
+            <div class="form-group">
+                <label for="torrent_720p">Torrent 720p URL:</label>
+                <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
+            </div>
+            <div class="form-group">
+                <label for="torrent_1080p">Torrent 1080p URL:</label>
+                <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
+            </div>
+            <div class="form-group">
+                <label for="torrent_2160p">Torrent 2160p URL:</label>
+                <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:...">
+            </div>
+
             <button type="submit" class="btn-primary">Save Movie</button>
         </form>
     </div>
@@ -167,7 +181,8 @@
                 cast_members: JSON.parse(form.cast_members.value || '[]'),
                 genres: genres, // Add genres here
                 video_links: {},
-                download_links: {}
+                download_links: {},
+                torrent_links: {} // Add torrent_links object
             };
 
             // Collect video links
@@ -190,6 +205,17 @@
             }
             if (form.download_2160p.value) {
                 data.download_links.download_2160p = { url: form.download_2160p.value, file_type: 'webrip' };
+            }
+
+            // Collect torrent links
+            if (form.torrent_720p.value) {
+                data.torrent_links.torrent_720p = form.torrent_720p.value;
+            }
+            if (form.torrent_1080p.value) {
+                data.torrent_links.torrent_1080p = form.torrent_1080p.value;
+            }
+            if (form.torrent_2160p.value) {
+                data.torrent_links.torrent_2160p = form.torrent_2160p.value;
             }
 
             try {
