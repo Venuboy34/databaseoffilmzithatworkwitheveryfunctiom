@@ -44,6 +44,10 @@
         </div>
         
         <div>
+            <label for="video_720p">720p Video Link:</label>
+            <input type="text" id="video_720p" name="video_720p">
+        </div>
+        <div>
             <label for="video_1080p">1080p Video Link:</label>
             <input type="text" id="video_1080p" name="video_1080p">
         </div>
@@ -53,6 +57,10 @@
         </div>
 
         <div>
+            <label for="download_720p">720p Download Link:</label>
+            <input type="text" id="download_720p" name="download_720p">
+        </div>
+        <div>
             <label for="download_1080p">1080p Download Link:</label>
             <input type="text" id="download_1080p" name="download_1080p">
         </div>
@@ -61,6 +69,10 @@
             <input type="text" id="download_2160p" name="download_2160p">
         </div>
 
+        <div>
+            <label for="torrent_720p">720p Torrent Link:</label>
+            <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
+        </div>
         <div>
             <label for="torrent_1080p">1080p Torrent Link:</label>
             <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
@@ -91,14 +103,17 @@
                 const formData = new FormData(form);
 
                 const videoLinks = {};
+                if (formData.get('video_720p')) videoLinks['720p'] = formData.get('video_720p');
                 if (formData.get('video_1080p')) videoLinks['1080p'] = formData.get('video_1080p');
                 if (formData.get('video_2160p')) videoLinks['2160p'] = formData.get('video_2160p');
 
                 const downloadLinks = {};
+                if (formData.get('download_720p')) downloadLinks['720p'] = { url: formData.get('download_720p'), file_type: 'webrip' };
                 if (formData.get('download_1080p')) downloadLinks['1080p'] = { url: formData.get('download_1080p'), file_type: 'webrip' };
                 if (formData.get('download_2160p')) downloadLinks['2160p'] = { url: formData.get('download_2160p'), file_type: 'webrip' };
 
                 const torrentLinks = {};
+                if (formData.get('torrent_720p')) torrentLinks['720p'] = formData.get('torrent_720p');
                 if (formData.get('torrent_1080p')) torrentLinks['1080p'] = formData.get('torrent_1080p');
                 if (formData.get('torrent_2160p')) torrentLinks['2160p'] = formData.get('torrent_2160p');
 
