@@ -60,6 +60,20 @@
                 <label for="cast-members">Cast (JSON):</label>
                 <textarea id="cast-members" name="cast_members"></textarea>
             </div>
+
+            <!-- TV Series Video Links -->
+            <div class="form-section">
+                <h2>🔗 TV Series Video Links</h2>
+                <div class="form-group">
+                    <label for="video_1080p">1080p Video Link:</label>
+                    <input type="text" id="video_1080p" name="video_1080p">
+                </div>
+                <div class="form-group">
+                    <label for="video_2160p">2160p Video Link:</label>
+                    <input type="text" id="video_2160p" name="video_2160p">
+                </div>
+            </div>
+
             <div id="seasons-container"></div>
             <button type="button" class="btn-secondary" onclick="addSeason()">Add Season</button>
             <br><br>
@@ -90,7 +104,6 @@
 
         function removeSeason(button) {
             button.closest('.season-container').remove();
-            // Re-index seasons if necessary
         }
 
         function addEpisode(button) {
@@ -101,14 +114,11 @@
             episodeDiv.classList.add('episode-row');
             episodeDiv.innerHTML = `
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode ${episodeCount} Name" required>
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_720p" placeholder="720p Torrent Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_1080p" placeholder="1080p Torrent Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_1080p" placeholder="1080p Torrent Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_2160p" placeholder="2160p Torrent Link">
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
@@ -141,6 +151,12 @@
                     // Join genre names into a comma-separated string
                     document.getElementById('genres').value = data.genres.join(', ');
                     document.getElementById('cast-members').value = JSON.stringify(data.cast_members, null, 2);
+                    
+                    // Populate TV series video links if available
+                    if (data.video_links) {
+                        document.getElementById('video_1080p').value = data.video_links['1080p'] || '';
+                        document.getElementById('video_2160p').value = data.video_links['2160p'] || '';
+                    }
                 } else {
                     const error = await response.json();
                     alert(`Error: ${error.message}`);
@@ -156,6 +172,10 @@
             const seasons = {};
             const totalSeasons = document.querySelectorAll('.season-container').length;
 
+            // Get TV series video links
+            const video1080p = document.getElementById('video_1080p').value;
+            const video2160p = document.getElementById('video_2160p').value;
+
             for (let i = 1; i <= totalSeasons; i++) {
                 const episodes = [];
                 const episodeInputs = document.querySelectorAll(`.episode-container[data-season-number="${i}"] .episode-row`);
@@ -164,29 +184,23 @@
                     const episodeNumber = index + 1;
                     const episodeName = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_name"]`).value;
                     
-                    const video720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_720p"]`).value;
-                    const download720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_720p"]`).value;
-                    const torrent720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_720p"]`).value;
-                    
                     const video1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_1080p"]`).value;
-                    const download1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_1080p"]`).value;
-                    const torrent1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_1080p"]`).value;
-                    
                     const video2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_2160p"]`).value;
+                    
+                    const download1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_1080p"]`).value;
                     const download2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_2160p"]`).value;
+                    
+                    const torrent1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_1080p"]`).value;
                     const torrent2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_2160p"]`).value;
 
                     episodes.push({
                         episode_number: episodeNumber,
                         episode_name: episodeName,
-                        video_720p: video720p,
-                        download_720p: { url: download720p, file_type: 'webrip' },
-                        torrent_720p: torrent720p,
                         video_1080p: video1080p,
-                        download_1080p: { url: download1080p, file_type: 'webrip' },
-                        torrent_1080p: torrent1080p,
                         video_2160p: video2160p,
+                        download_1080p: { url: download1080p, file_type: 'webrip' },
                         download_2160p: { url: download2160p, file_type: 'webrip' },
+                        torrent_1080p: torrent1080p,
                         torrent_2160p: torrent2160p
                     });
                 });
@@ -210,8 +224,14 @@
                 release_date: formData.get('release_date'),
                 language: formData.get('language'),
                 rating: parseFloat(formData.get('rating')),
-                genres: genresArray, // Now includes the genres
+                genres: genresArray,
                 cast_members: JSON.parse(formData.get('cast_members') || '[]'),
+                video_links: {
+                    '1080p': video1080p,
+                    '2160p': video2160p
+                },
+                download_links: {},
+                torrent_links: {},
                 total_seasons: totalSeasons,
                 seasons: seasons
             };
