@@ -69,45 +69,80 @@ def fetch_tmdb_data(tmdb_id, media_type):
     if not url:
         return None
 
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        cast = []
-        for member in data['credits']['cast'][:10]:
-            cast.append({
-                "name": member.get("name"),
-                "character": member.get("character"),
-                "image": f"https://image.tmdb.org/t/p/original{member.get('profile_path')}" if member.get('profile_path') else None
-            })
-        
-        # Add 1080p and 2160p video links
-        video_links = {}
-        if media_type == 'tv':
-            video_links['1080p'] = f"https://example.com/tv/{tmdb_id}/1080p"  # Placeholder URL
-            video_links['2160p'] = f"https://example.com/tv/{tmdb_id}/2160p"  # Placeholder URL
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            cast = []
+            for member in data['credits']['cast'][:10]:
+                cast.append({
+                    "name": member.get("name"),
+                    "character": member.get("character"),
+                    "image": f"https://image.tmdb.org/t/p/original{member.get('profile_path')}" if member.get('profile_path') else None
+                })
+            
+            # Initialize empty video links (will be filled by user)
+            video_links = {}
 
-        processed_data = {
-            'title': data.get('title') if media_type == 'movie' else data.get('name'),
-            'description': data.get('overview'),
-            'thumbnail': f"https://image.tmdb.org/t/p/original{data.get('poster_path')}" if data.get('poster_path') else None,
-            'release_date': data.get('release_date') if media_type == 'movie' else data.get('first_air_date'),
-            'language': data.get('original_language'),
-            'rating': data.get('vote_average'),
-            'cast_members': cast,
-            'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
-            'genres': [g['name'] for g in data.get('genres', [])], # Extract genres
-            'video_links': video_links
-        }
-        
-        return processed_data
-    return None
+            processed_data = {
+                'title': data.get('title') if media_type == 'movie' else data.get('name'),
+                'description': data.get('overview'),
+                'thumbnail': f"https://image.tmdb.org/t/p/original{data.get('poster_path')}" if data.get('poster_path') else None,
+                'release_date': data.get('release_date') if media_type == 'movie' else data.get('first_air_date'),
+                'language': data.get('original_language'),
+                'rating': data.get('vote_average'),
+                'cast_members': cast,
+                'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
+                'genres': [g['name'] for g in data.get('genres', [])],
+                'video_links': video_links
+            }
+            
+            return processed_data
+        else:
+            return None
+    except requests.RequestException:
+        return None
 
 def fetch_genres(media_type):
     url = f"https://api.themoviedb.org/3/genre/{media_type}/list?api_key={TMDB_API_KEY}"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.json().get('genres', [])
-    return []
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            return response.json().get('genres', [])
+        return []
+    except requests.RequestException:
+        return []
+
+# --- Helper Functions ---
+def safe_json_loads(data, default=None):
+    """Safely parse JSON data with proper error handling"""
+    if data is None:
+        return default
+    if isinstance(data, (dict, list)):
+        return data
+    try:
+        return json.loads(data) if data else default
+    except (json.JSONDecodeError, TypeError):
+        return default
+
+def prepare_media_data(data):
+    """Prepare and validate media data before database operations"""
+    return {
+        'type': data.get('type'),
+        'title': data.get('title', '').strip(),
+        'description': data.get('description', '').strip() or None,
+        'thumbnail': data.get('thumbnail', '').strip() or None,
+        'release_date': data.get('release_date') or None,
+        'language': data.get('language', '').strip() or None,
+        'rating': float(data.get('rating')) if data.get('rating') not in [None, ''] else None,
+        'cast_members': safe_json_loads(data.get('cast_members'), []),
+        'video_links': safe_json_loads(data.get('video_links'), {}),
+        'download_links': safe_json_loads(data.get('download_links'), {}),
+        'torrent_links': safe_json_loads(data.get('torrent_links'), {}),
+        'total_seasons': data.get('total_seasons'),
+        'seasons': safe_json_loads(data.get('seasons')),
+        'genres': data.get('genres', [])
+    }
 
 # --- Main Public Routes ---
 @app.route("/")
@@ -144,37 +179,92 @@ def search_and_edit_page():
 def edit_media_page():
     return render_template("edit_media.html")
 
+@app.route("/admin/add_episode")
+@requires_auth
+def add_episode_page():
+    media_id = request.args.get('media_id')
+    if not media_id:
+        return "Media ID required", 400
+    
+    conn, error = get_db()
+    if error:
+        return f"Database error: {error}", 500
+    
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT id, title FROM media WHERE id = %s AND type = 'tv';", (media_id,))
+    media = cur.fetchone()
+    
+    if not media:
+        return "TV series not found", 404
+    
+    return render_template("add_episode.html", media=dict(media))
+
 # --- Public API Endpoints ---
 @app.route("/api/media", methods=["GET"])
 def get_all_media():
     conn, error = get_db()
     if error:
         return jsonify({"message": "Database connection error", "error": error}), 500
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT * FROM media ORDER BY id DESC;")
-    media = cur.fetchall()
-    return jsonify([dict(row) for row in media])
+    
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT * FROM media ORDER BY id DESC;")
+        media = cur.fetchall()
+        
+        # Parse JSON fields for proper frontend consumption
+        media_list = []
+        for row in media:
+            media_dict = dict(row)
+            # Parse JSON fields
+            media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
+            media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
+            media_dict['download_links'] = safe_json_loads(media_dict.get('download_links'), {})
+            media_dict['torrent_links'] = safe_json_loads(media_dict.get('torrent_links'), {})
+            media_dict['seasons'] = safe_json_loads(media_dict.get('seasons'))
+            media_dict['genres'] = safe_json_loads(media_dict.get('genres'), [])
+            media_list.append(media_dict)
+        
+        return jsonify(media_list)
+    except psycopg2.Error as e:
+        return jsonify({"message": "Database error", "error": str(e)}), 500
 
 @app.route("/api/media/<int:media_id>", methods=["GET"])
 def get_single_media(media_id):
     conn, error = get_db()
     if error:
         return jsonify({"message": "Database connection error", "error": error}), 500
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    cur.execute("SELECT * FROM media WHERE id = %s;", (media_id,))
-    media = cur.fetchone()
-    if media:
-        return jsonify(dict(media))
-    return jsonify({"message": "Media not found"}), 404
+    
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT * FROM media WHERE id = %s;", (media_id,))
+        media = cur.fetchone()
+        
+        if media:
+            media_dict = dict(media)
+            # Parse JSON fields for frontend
+            media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
+            media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
+            media_dict['download_links'] = safe_json_loads(media_dict.get('download_links'), {})
+            media_dict['torrent_links'] = safe_json_loads(media_dict.get('torrent_links'), {})
+            media_dict['seasons'] = safe_json_loads(media_dict.get('seasons'))
+            media_dict['genres'] = safe_json_loads(media_dict.get('genres'), [])
+            return jsonify(media_dict)
+        
+        return jsonify({"message": "Media not found"}), 404
+    except psycopg2.Error as e:
+        return jsonify({"message": "Database error", "error": str(e)}), 500
 
 @app.route("/api/genres", methods=["GET"])
 def get_all_genres():
-    movie_genres = fetch_genres('movie')
-    tv_genres = fetch_genres('tv')
-    # Combine and deduplicate genres
-    all_genres = {genre['name'] for genre in movie_genres}
-    all_genres.update({genre['name'] for genre in tv_genres})
-    return jsonify(sorted(list(all_genres)))
+    try:
+        movie_genres = fetch_genres('movie')
+        tv_genres = fetch_genres('tv')
+        # Combine and deduplicate genres
+        all_genres = {genre['name'] for genre in movie_genres}
+        all_genres.update({genre['name'] for genre in tv_genres})
+        return jsonify(sorted(list(all_genres)))
+    except Exception as e:
+        return jsonify({"message": "Error fetching genres", "error": str(e)}), 500
 
 # --- Admin API Endpoints ---
 @app.route("/api/admin/tmdb_fetch", methods=["POST"])
@@ -197,25 +287,40 @@ def tmdb_fetch_api():
 @requires_auth
 def add_media():
     data = request.json
+    if not data or not data.get('title'):
+        return jsonify({"message": "Title is required"}), 400
+    
     conn, error = get_db()
     if error:
         return jsonify({"message": "Database connection error", "error": error}), 500
-    cur = conn.cursor()
+    
     try:
+        media_data = prepare_media_data(data)
+        
+        cur = conn.cursor()
         cur.execute("""
-            INSERT INTO media (type, title, description, thumbnail, release_date, language, rating, cast_members, video_links, download_links, total_seasons, seasons, genres, torrent_links)
+            INSERT INTO media (type, title, description, thumbnail, release_date, language, rating, 
+                              cast_members, video_links, download_links, torrent_links,
+                              total_seasons, seasons, genres)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
-            data.get('type'), data.get('title'), data.get('description'), data.get('thumbnail'),
-            data.get('release_date'), data.get('language'), data.get('rating'),
-            json.dumps(data.get('cast_members')), json.dumps(data.get('video_links')), json.dumps(data.get('download_links')),
-            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')), json.dumps(data.get('torrent_links'))
+            media_data['type'], media_data['title'], media_data['description'], media_data['thumbnail'],
+            media_data['release_date'], media_data['language'], media_data['rating'],
+            json.dumps(media_data['cast_members']), 
+            json.dumps(media_data['video_links']), 
+            json.dumps(media_data['download_links']),
+            json.dumps(media_data['torrent_links']),
+            media_data['total_seasons'], 
+            json.dumps(media_data['seasons']), 
+            json.dumps(media_data['genres'])
         ))
+        
         media_id = cur.fetchone()[0]
         conn.commit()
         return jsonify({"message": "Media added successfully", "id": media_id}), 201
-    except (psycopg2.DatabaseError, json.JSONDecodeError) as e:
+        
+    except (psycopg2.DatabaseError, json.JSONDecodeError, ValueError) as e:
         conn.rollback()
         return jsonify({"message": "Error adding media", "error": str(e)}), 400
 
@@ -223,30 +328,109 @@ def add_media():
 @requires_auth
 def update_media(media_id):
     data = request.json
+    if not data or not data.get('title'):
+        return jsonify({"message": "Title is required"}), 400
+    
     conn, error = get_db()
     if error:
         return jsonify({"message": "Database connection error", "error": error}), 500
-    cur = conn.cursor()
+    
     try:
+        media_data = prepare_media_data(data)
+        
+        cur = conn.cursor()
         cur.execute("""
             UPDATE media SET
                 type = %s, title = %s, description = %s, thumbnail = %s, release_date = %s,
-                language = %s, rating = %s, cast_members = %s, video_links = %s, download_links = %s,
-                total_seasons = %s, seasons = %s, genres = %s, torrent_links = %s
+                language = %s, rating = %s, cast_members = %s, video_links = %s, 
+                download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s
             WHERE id = %s;
         """, (
-            data.get('type'), data.get('title'), data.get('description'), data.get('thumbnail'),
-            data.get('release_date'), data.get('language'), data.get('rating'),
-            json.dumps(data.get('cast_members')), json.dumps(data.get('video_links')), json.dumps(data.get('download_links')),
-            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')), json.dumps(data.get('torrent_links')), media_id
+            media_data['type'], media_data['title'], media_data['description'], media_data['thumbnail'],
+            media_data['release_date'], media_data['language'], media_data['rating'],
+            json.dumps(media_data['cast_members']), 
+            json.dumps(media_data['video_links']), 
+            json.dumps(media_data['download_links']),
+            json.dumps(media_data['torrent_links']),
+            media_data['total_seasons'], 
+            json.dumps(media_data['seasons']), 
+            json.dumps(media_data['genres']),
+            media_id
         ))
+        
         conn.commit()
         if cur.rowcount == 0:
             return jsonify({"message": "Media not found"}), 404
+        
         return jsonify({"message": "Media updated successfully"}), 200
-    except (psycopg2.DatabaseError, json.JSONDecodeError) as e:
+        
+    except (psycopg2.DatabaseError, json.JSONDecodeError, ValueError) as e:
         conn.rollback()
         return jsonify({"message": "Error updating media", "error": str(e)}), 400
+
+@app.route("/api/admin/media/<int:media_id>/episode", methods=["POST"])
+@requires_auth
+def add_episode(media_id):
+    data = request.json
+    if not data:
+        return jsonify({"message": "Episode data is required"}), 400
+    
+    conn, error = get_db()
+    if error:
+        return jsonify({"message": "Database connection error", "error": error}), 500
+    
+    try:
+        # Get current media data
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        cur.execute("SELECT seasons FROM media WHERE id = %s AND type = 'tv';", (media_id,))
+        media = cur.fetchone()
+        
+        if not media:
+            return jsonify({"message": "TV series not found"}), 404
+        
+        current_seasons = safe_json_loads(media['seasons'], {})
+        
+        # Prepare episode data
+        season_number = data.get('season_number')
+        episode_data = {
+            'episode_number': data.get('episode_number'),
+            'episode_name': data.get('episode_name'),
+            'video_720p': data.get('video_links', {}).get('720p'),
+            'video_1080p': data.get('video_links', {}).get('1080p'),
+            'video_2160p': data.get('video_links', {}).get('2160p'),
+            'download_720p': data.get('download_links', {}).get('720p'),
+            'download_1080p': data.get('download_links', {}).get('1080p'),
+            'download_2160p': data.get('download_links', {}).get('2160p'),
+            'torrent_720p': data.get('torrent_links', {}).get('720p'),
+            'torrent_1080p': data.get('torrent_links', {}).get('1080p'),
+            'torrent_2160p': data.get('torrent_links', {}).get('2160p')
+        }
+        
+        # Add episode to season
+        season_key = f'season_{season_number}'
+        if season_key not in current_seasons:
+            current_seasons[season_key] = {
+                'season_number': season_number,
+                'total_episodes': 0,
+                'episodes': []
+            }
+        
+        # Add episode
+        current_seasons[season_key]['episodes'].append(episode_data)
+        current_seasons[season_key]['total_episodes'] = len(current_seasons[season_key]['episodes'])
+        
+        # Update database
+        cur.execute("""
+            UPDATE media SET seasons = %s 
+            WHERE id = %s;
+        """, (json.dumps(current_seasons), media_id))
+        
+        conn.commit()
+        return jsonify({"message": "Episode added successfully"}), 200
+        
+    except (psycopg2.DatabaseError, json.JSONDecodeError, ValueError) as e:
+        conn.rollback()
+        return jsonify({"message": "Error adding episode", "error": str(e)}), 400
 
 @app.route("/api/admin/media/<int:media_id>", methods=["DELETE"])
 @requires_auth
@@ -254,16 +438,29 @@ def delete_media(media_id):
     conn, error = get_db()
     if error:
         return jsonify({"message": "Database connection error", "error": error}), 500
-    cur = conn.cursor()
+    
     try:
+        cur = conn.cursor()
         cur.execute("DELETE FROM media WHERE id = %s;", (media_id,))
         conn.commit()
+        
         if cur.rowcount == 0:
             return jsonify({"message": "Media not found"}), 404
+        
         return jsonify({"message": "Media deleted successfully"}), 200
+        
     except psycopg2.DatabaseError as e:
         conn.rollback()
         return jsonify({"message": "Error deleting media", "error": str(e)}), 400
+
+# Error handlers
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"message": "Resource not found"}), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"message": "Internal server error"}), 500
 
 if __name__ == "__main__":
     # For production, set host='0.0.0.0' to allow external connections
