@@ -83,6 +83,7 @@ def fetch_tmdb_data(tmdb_id, media_type):
             
             # Initialize empty video links for both movie and TV
             video_links = {
+                '720p': "",  # Empty placeholder for 720p
                 '1080p': "",  # Empty placeholder for 1080p
                 '2160p': ""   # Empty placeholder for 2160p
             }
@@ -97,7 +98,7 @@ def fetch_tmdb_data(tmdb_id, media_type):
                 'cast_members': cast,
                 'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
                 'genres': [g['name'] for g in data.get('genres', [])],
-                'video_links': video_links  # Now includes 1080p and 2160p placeholders
+                'video_links': video_links  # Now includes 720p, 1080p and 2160p placeholders
             }
             
             return processed_data
@@ -398,10 +399,13 @@ def add_episode(media_id):
         episode_data = {
             'episode_number': data.get('episode_number'),
             'episode_name': data.get('episode_name'),
+            'video_720p': data.get('video_links', {}).get('720p'),
             'video_1080p': data.get('video_links', {}).get('1080p'),
             'video_2160p': data.get('video_links', {}).get('2160p'),
+            'download_720p': data.get('download_links', {}).get('720p'),
             'download_1080p': data.get('download_links', {}).get('1080p'),
             'download_2160p': data.get('download_links', {}).get('2160p'),
+            'torrent_720p': data.get('torrent_links', {}).get('720p'),
             'torrent_1080p': data.get('torrent_links', {}).get('1080p'),
             'torrent_2160p': data.get('torrent_links', {}).get('2160p')
         }
