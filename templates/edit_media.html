@@ -308,6 +308,20 @@
                             <label for="download_2160p">Download 2160p URL:</label>
                             <input type="text" id="download_2160p" name="download_2160p">
                         </div>
+                        <hr style="border-color: #555; margin: 20px 0;">
+                        <h2>🧲 Torrent Links</h2>
+                        <div class="form-group">
+                            <label for="torrent_720p">Torrent 720p URL:</label>
+                            <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
+                        </div>
+                        <div class="form-group">
+                            <label for="torrent_1080p">Torrent 1080p URL:</label>
+                            <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
+                        </div>
+                        <div class="form-group">
+                            <label for="torrent_2160p">Torrent 2160p URL:</label>
+                            <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:...">
+                        </div>
                     </div>
                 `;
 
@@ -325,6 +339,13 @@
                         (media.download_links.download_1080p && media.download_links.download_1080p.url) || '';
                     document.getElementById('download_2160p').value = 
                         (media.download_links.download_2160p && media.download_links.download_2160p.url) || '';
+                }
+
+                // Populate torrent links
+                if (media.torrent_links && typeof media.torrent_links === 'object') {
+                    document.getElementById('torrent_720p').value = media.torrent_links.torrent_720p || '';
+                    document.getElementById('torrent_1080p').value = media.torrent_links.torrent_1080p || '';
+                    document.getElementById('torrent_2160p').value = media.torrent_links.torrent_2160p || '';
                 }
             } else if (media.type === 'tv') {
                 dynamicFieldsContainer.innerHTML = `
@@ -401,15 +422,21 @@
             const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
             const download2160p = episodeData ? 
                 (episodeData.download_2160p && episodeData.download_2160p.url ? episodeData.download_2160p.url : '') : '';
+            const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
+            const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
+            const torrent2160p = episodeData ? (episodeData.torrent_2160p || '') : '';
             
             episodeDiv.innerHTML = `
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required>
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link" value="${video720p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link" value="${download720p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_720p" placeholder="720p Torrent Link" value="${torrent720p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link" value="${video1080p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link" value="${download1080p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_1080p" placeholder="1080p Torrent Link" value="${torrent1080p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link" value="${video2160p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link" value="${download2160p}">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_2160p" placeholder="2160p Torrent Link" value="${torrent2160p}">
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
@@ -482,6 +509,9 @@
                 const download720p = form.download_720p ? form.download_720p.value.trim() : '';
                 const download1080p = form.download_1080p ? form.download_1080p.value.trim() : '';
                 const download2160p = form.download_2160p ? form.download_2160p.value.trim() : '';
+                const torrent720p = form.torrent_720p ? form.torrent_720p.value.trim() : '';
+                const torrent1080p = form.torrent_1080p ? form.torrent_1080p.value.trim() : '';
+                const torrent2160p = form.torrent_2160p ? form.torrent_2160p.value.trim() : '';
 
                 data.video_links = {
                     '720p': video720p || null,
@@ -493,6 +523,12 @@
                     '720p': download720p ? { url: download720p, file_type: 'webrip' } : null,
                     '1080p': download1080p ? { url: download1080p, file_type: 'webrip' } : null,
                     '2160p': download2160p ? { url: download2160p, file_type: 'webrip' } : null
+                };
+
+                data.torrent_links = {
+                    '720p': torrent720p || null,
+                    '1080p': torrent1080p || null,
+                    '2160p': torrent2160p || null
                 };
                 
                 data.total_seasons = null;
@@ -513,12 +549,15 @@
                         
                         const video720p = row.querySelector(`input[placeholder="720p Video Link"]`)?.value.trim() || '';
                         const download720p = row.querySelector(`input[placeholder="720p Download Link"]`)?.value.trim() || '';
+                        const torrent720p = row.querySelector(`input[placeholder="720p Torrent Link"]`)?.value.trim() || '';
                         
                         const video1080p = row.querySelector(`input[placeholder="1080p Video Link"]`)?.value.trim() || '';
                         const download1080p = row.querySelector(`input[placeholder="1080p Download Link"]`)?.value.trim() || '';
+                        const torrent1080p = row.querySelector(`input[placeholder="1080p Torrent Link"]`)?.value.trim() || '';
                         
                         const video2160p = row.querySelector(`input[placeholder="2160p Video Link"]`)?.value.trim() || '';
                         const download2160p = row.querySelector(`input[placeholder="2160p Download Link"]`)?.value.trim() || '';
+                        const torrent2160p = row.querySelector(`input[placeholder="2160p Torrent Link"]`)?.value.trim() || '';
                         
                         if (episodeName) { // Only add episodes with names
                             episodes.push({
@@ -526,10 +565,13 @@
                                 episode_name: episodeName,
                                 video_720p: video720p || null,
                                 download_720p: download720p ? { url: download720p, file_type: 'webrip' } : null,
+                                torrent_720p: torrent720p || null,
                                 video_1080p: video1080p || null,
                                 download_1080p: download1080p ? { url: download1080p, file_type: 'webrip' } : null,
+                                torrent_1080p: torrent1080p || null,
                                 video_2160p: video2160p || null,
-                                download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null
+                                download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null,
+                                torrent_2160p: torrent2160p || null
                             });
                         }
                     });
@@ -548,6 +590,7 @@
                 data.seasons = Object.keys(seasons).length > 0 ? seasons : null;
                 data.video_links = null;
                 data.download_links = null;
+                data.torrent_links = null;
             }
 
             // Final validation
