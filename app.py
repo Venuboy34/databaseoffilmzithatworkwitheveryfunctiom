@@ -203,14 +203,14 @@ def add_media():
     cur = conn.cursor()
     try:
         cur.execute("""
-            INSERT INTO media (type, title, description, thumbnail, release_date, language, rating, cast_members, video_links, download_links, total_seasons, seasons, genres)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO media (type, title, description, thumbnail, release_date, language, rating, cast_members, video_links, download_links, total_seasons, seasons, genres, torrent_links)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
             data.get('type'), data.get('title'), data.get('description'), data.get('thumbnail'),
             data.get('release_date'), data.get('language'), data.get('rating'),
             json.dumps(data.get('cast_members')), json.dumps(data.get('video_links')), json.dumps(data.get('download_links')),
-            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')) # Added genres here
+            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')), json.dumps(data.get('torrent_links'))
         ))
         media_id = cur.fetchone()[0]
         conn.commit()
@@ -232,13 +232,13 @@ def update_media(media_id):
             UPDATE media SET
                 type = %s, title = %s, description = %s, thumbnail = %s, release_date = %s,
                 language = %s, rating = %s, cast_members = %s, video_links = %s, download_links = %s,
-                total_seasons = %s, seasons = %s, genres = %s
+                total_seasons = %s, seasons = %s, genres = %s, torrent_links = %s
             WHERE id = %s;
         """, (
             data.get('type'), data.get('title'), data.get('description'), data.get('thumbnail'),
             data.get('release_date'), data.get('language'), data.get('rating'),
             json.dumps(data.get('cast_members')), json.dumps(data.get('video_links')), json.dumps(data.get('download_links')),
-            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')), media_id # Added genres here
+            data.get('total_seasons'), json.dumps(data.get('seasons')), json.dumps(data.get('genres')), json.dumps(data.get('torrent_links')), media_id
         ))
         conn.commit()
         if cur.rowcount == 0:
