@@ -103,10 +103,13 @@
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode ${episodeCount} Name" required>
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_720p" placeholder="720p Torrent Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_1080p" placeholder="1080p Torrent Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link">
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_2160p" placeholder="2160p Torrent Link">
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
@@ -163,22 +166,28 @@
                     
                     const video720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_720p"]`).value;
                     const download720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_720p"]`).value;
+                    const torrent720p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_720p"]`).value;
                     
                     const video1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_1080p"]`).value;
                     const download1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_1080p"]`).value;
+                    const torrent1080p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_1080p"]`).value;
                     
                     const video2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_video_2160p"]`).value;
                     const download2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_download_2160p"]`).value;
+                    const torrent2160p = episodeRow.querySelector(`[name="season_${i}_episode_${episodeNumber}_torrent_2160p"]`).value;
 
                     episodes.push({
                         episode_number: episodeNumber,
                         episode_name: episodeName,
                         video_720p: video720p,
                         download_720p: { url: download720p, file_type: 'webrip' },
+                        torrent_720p: torrent720p,
                         video_1080p: video1080p,
                         download_1080p: { url: download1080p, file_type: 'webrip' },
+                        torrent_1080p: torrent1080p,
                         video_2160p: video2160p,
-                        download_2160p: { url: download2160p, file_type: 'webrip' }
+                        download_2160p: { url: download2160p, file_type: 'webrip' },
+                        torrent_2160p: torrent2160p
                     });
                 });
 
