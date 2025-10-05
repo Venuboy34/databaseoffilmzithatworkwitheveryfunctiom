@@ -69,6 +69,19 @@
             <input type="text" id="download_2160p" name="download_2160p">
         </div>
 
+        <div>
+            <label for="torrent_720p">720p Torrent Link:</label>
+            <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
+        </div>
+        <div>
+            <label for="torrent_1080p">1080p Torrent Link:</label>
+            <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
+        </div>
+        <div>
+            <label for="torrent_2160p">2160p Torrent Link:</label>
+            <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:...">
+        </div>
+
         <div class="button-group">
             <button type="submit">Save Episode</button>
             <a href="/admin/search_and_edit">Cancel</a>
@@ -102,12 +115,18 @@
                 if (formData.get('download_1080p')) downloadLinks['1080p'] = { url: formData.get('download_1080p'), file_type: 'webrip' };
                 if (formData.get('download_2160p')) downloadLinks['2160p'] = { url: formData.get('download_2160p'), file_type: 'webrip' };
 
+                const torrentLinks = {};
+                if (formData.get('torrent_720p')) torrentLinks['720p'] = formData.get('torrent_720p');
+                if (formData.get('torrent_1080p')) torrentLinks['1080p'] = formData.get('torrent_1080p');
+                if (formData.get('torrent_2160p')) torrentLinks['2160p'] = formData.get('torrent_2160p');
+
                 const data = {
                     season_number: parseInt(formData.get('season_number')),
                     episode_number: parseInt(formData.get('episode_number')),
                     episode_name: formData.get('episode_name'),
                     video_links: videoLinks,
-                    download_links: downloadLinks
+                    download_links: downloadLinks,
+                    torrent_links: torrentLinks
                 };
 
                 try {
