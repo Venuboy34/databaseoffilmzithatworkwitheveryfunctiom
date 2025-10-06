@@ -163,6 +163,11 @@
             opacity: 0.6;
             pointer-events: none;
         }
+
+        .empty-field {
+            border: 1px dashed #ff6b6b !important;
+            background: #5a4a4a !important;
+        }
     </style>
 </head>
 <body>
@@ -262,7 +267,12 @@
             document.getElementById('title').value = media.title || '';
             document.getElementById('description').value = media.description || '';
             document.getElementById('thumbnail').value = media.thumbnail || '';
-            document.getElementById('release_date').value = media.release_date || '';
+            
+            // Handle release date - preserve existing date
+            if (media.release_date) {
+                document.getElementById('release_date').value = media.release_date;
+            }
+            
             document.getElementById('language').value = media.language || '';
             document.getElementById('rating').value = media.rating || '';
             
@@ -325,7 +335,7 @@
                     </div>
                 `;
 
-                // Populate movie fields safely
+                // Populate movie fields safely - handle empty values
                 if (media.video_links && typeof media.video_links === 'object') {
                     document.getElementById('video_720p').value = media.video_links.video_720p || '';
                     document.getElementById('video_1080p').value = media.video_links.video_1080p || '';
@@ -390,6 +400,30 @@
                     });
                 }
             }
+
+            // Add visual indicators for empty fields
+            highlightEmptyFields();
+        }
+
+        function highlightEmptyFields() {
+            // Highlight empty input fields
+            const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea');
+            inputs.forEach(input => {
+                if (!input.value.trim()) {
+                    input.classList.add('empty-field');
+                } else {
+                    input.classList.remove('empty-field');
+                }
+                
+                // Update on input change
+                input.addEventListener('input', function() {
+                    if (!this.value.trim()) {
+                        this.classList.add('empty-field');
+                    } else {
+                        this.classList.remove('empty-field');
+                    }
+                });
+            });
         }
 
         function addSeason(seasonData = null) {
@@ -417,7 +451,9 @@
         }
 
         function removeSeason(button) {
-            button.closest('.season-container').remove();
+            if (confirm('Are you sure you want to remove this season and all its episodes?')) {
+                button.closest('.season-container').remove();
+            }
         }
 
         function addEpisode(button, episodeData = null) {
@@ -455,10 +491,15 @@
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
+            
+            // Highlight empty fields for new episode
+            setTimeout(() => highlightEmptyFields(), 100);
         }
 
         function removeEpisode(button) {
-            button.closest('.episode-row').remove();
+            if (confirm('Are you sure you want to remove this episode?')) {
+                button.closest('.episode-row').remove();
+            }
         }
 
         // Enhanced form submission with robust error handling
@@ -503,13 +544,13 @@
             const genresInput = form.genres.value.trim();
             const genresArray = genresInput ? genresInput.split(',').map(g => g.trim()) : [];
             
-            // Build base data object
+            // Build base data object - preserve existing values
             const data = {
                 type: mediaType,
                 title: form.title.value.trim(),
                 description: form.description.value.trim() || null,
                 thumbnail: form.thumbnail.value.trim() || null,
-                release_date: form.release_date.value || null,
+                release_date: form.release_date.value || null, // This will preserve the date
                 language: form.language.value.trim() || null,
                 rating: form.rating.value ? parseFloat(form.rating.value) : null,
                 genres: genresArray,
