@@ -219,6 +219,10 @@
                     <input type="text" id="thumbnail" name="thumbnail" placeholder="https://example.com/poster.jpg">
                 </div>
                 <div class="form-group">
+                    <label for="backdrop">Backdrop Image URL:</label>
+                    <input type="text" id="backdrop" name="backdrop" placeholder="https://example.com/backdrop.jpg">
+                </div>
+                <div class="form-group">
                     <label for="release_date">Release Date:</label>
                     <input type="date" id="release_date" name="release_date">
                 </div>
@@ -289,6 +293,7 @@
             document.getElementById('title').value = media.title || '';
             document.getElementById('description').value = media.description || '';
             document.getElementById('thumbnail').value = media.thumbnail || '';
+            document.getElementById('backdrop').value = media.backdrop || '';
             document.getElementById('release_date').value = media.release_date || '';
             document.getElementById('language').value = media.language || '';
             document.getElementById('rating').value = media.rating || '';
@@ -520,6 +525,7 @@
                 title: form.title.value.trim(),
                 description: form.description.value.trim() || null,
                 thumbnail: form.thumbnail.value.trim() || null,
+                backdrop: form.backdrop.value.trim() || null,
                 release_date: form.release_date.value || null,
                 language: form.language.value.trim() || null,
                 rating: form.rating.value ? parseFloat(form.rating.value) : null,
