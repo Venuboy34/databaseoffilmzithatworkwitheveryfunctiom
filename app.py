@@ -92,6 +92,7 @@ def fetch_tmdb_data(tmdb_id, media_type):
                 'title': data.get('title') if media_type == 'movie' else data.get('name'),
                 'description': data.get('overview'),
                 'thumbnail': f"https://image.tmdb.org/t/p/original{data.get('poster_path')}" if data.get('poster_path') else None,
+                'backdrop': f"https://image.tmdb.org/t/p/original{data.get('backdrop_path')}" if data.get('backdrop_path') else None,
                 'release_date': data.get('release_date') if media_type == 'movie' else data.get('first_air_date'),
                 'language': data.get('original_language'),
                 'rating': data.get('vote_average'),
@@ -213,6 +214,7 @@ def prepare_media_data(data):
         'title': clean_value(data.get('title', '')),
         'description': clean_value(data.get('description')),
         'thumbnail': clean_value(data.get('thumbnail')),
+        'backdrop': clean_value(data.get('backdrop')),
         'release_date': clean_value(data.get('release_date')),
         'language': clean_value(data.get('language')),
         'rating': rating,
@@ -385,16 +387,17 @@ def add_media():
         
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO media (type, title, description, thumbnail, release_date, language, rating, 
+            INSERT INTO media (type, title, description, thumbnail, backdrop, release_date, language, rating, 
                               cast_members, video_links, download_links, torrent_links,
                               total_seasons, seasons, genres)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
             media_data['type'], 
             media_data['title'], 
             media_data['description'], 
             media_data['thumbnail'],
+            media_data['backdrop'],
             media_data['release_date'], 
             media_data['language'], 
             media_data['rating'],
@@ -435,7 +438,7 @@ def update_media(media_id):
         cur = conn.cursor()
         cur.execute("""
             UPDATE media SET
-                type = %s, title = %s, description = %s, thumbnail = %s, release_date = %s,
+                type = %s, title = %s, description = %s, thumbnail = %s, backdrop = %s, release_date = %s,
                 language = %s, rating = %s, cast_members = %s, video_links = %s, 
                 download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s
             WHERE id = %s;
@@ -444,6 +447,7 @@ def update_media(media_id):
             media_data['title'], 
             media_data['description'], 
             media_data['thumbnail'],
+            media_data['backdrop'],
             media_data['release_date'], 
             media_data['language'], 
             media_data['rating'],
