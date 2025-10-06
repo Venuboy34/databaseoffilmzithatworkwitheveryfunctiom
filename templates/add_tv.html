@@ -41,6 +41,10 @@
                 <input type="text" id="poster-url" name="thumbnail">
             </div>
             <div class="form-group">
+                <label for="backdrop-url">Backdrop Image URL:</label>
+                <input type="text" id="backdrop-url" name="backdrop">
+            </div>
+            <div class="form-group">
                 <label for="release-date">Release Date:</label>
                 <input type="date" id="release-date" name="release_date">
             </div>
@@ -152,6 +156,7 @@
                     document.getElementById('title').value = data.title;
                     document.getElementById('description').value = data.description;
                     document.getElementById('poster-url').value = data.thumbnail;
+                    document.getElementById('backdrop-url').value = data.backdrop;
                     document.getElementById('release-date').value = data.release_date;
                     document.getElementById('language').value = data.language;
                     document.getElementById('rating').value = data.rating;
@@ -236,6 +241,7 @@
                 title: formData.get('title'),
                 description: formData.get('description'),
                 thumbnail: formData.get('thumbnail'),
+                backdrop: formData.get('backdrop'),
                 release_date: formData.get('release_date'),
                 language: formData.get('language'),
                 rating: parseFloat(formData.get('rating')),
