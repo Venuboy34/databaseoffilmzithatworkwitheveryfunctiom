@@ -129,24 +129,104 @@ def safe_json_loads(data, default=None):
     except (json.JSONDecodeError, TypeError):
         return default
 
+def clean_value(value):
+    """Clean and validate input values"""
+    if isinstance(value, str):
+        value = value.strip()
+        return value if value else None
+    return value
+
 def prepare_media_data(data):
     """Prepare and validate media data before database operations"""
-    return {
+    print("Raw data received:", data)  # Debug log
+    
+    # Process genres - handle both string and array input
+    genres = data.get('genres', [])
+    if isinstance(genres, str):
+        genres = [g.strip() for g in genres.split(',')] if genres else []
+    elif genres is None:
+        genres = []
+    
+    # Process video links
+    video_links = {}
+    if data.get('video_links'):
+        video_links = safe_json_loads(data.get('video_links'), {})
+    else:
+        # Handle individual video link fields
+        video_links = {
+            '720p': clean_value(data.get('video_720p')),
+            '1080p': clean_value(data.get('video_1080p')),
+            '2160p': clean_value(data.get('video_2160p'))
+        }
+    
+    # Process download links
+    download_links = {}
+    if data.get('download_links'):
+        download_links = safe_json_loads(data.get('download_links'), {})
+    else:
+        # Handle individual download link fields
+        download_720p = clean_value(data.get('download_720p'))
+        download_1080p = clean_value(data.get('download_1080p'))
+        download_2160p = clean_value(data.get('download_2160p'))
+        
+        if download_720p:
+            download_links['720p'] = {'url': download_720p, 'file_type': 'webrip'}
+        if download_1080p:
+            download_links['1080p'] = {'url': download_1080p, 'file_type': 'webrip'}
+        if download_2160p:
+            download_links['2160p'] = {'url': download_2160p, 'file_type': 'webrip'}
+    
+    # Process torrent links
+    torrent_links = {}
+    if data.get('torrent_links'):
+        torrent_links = safe_json_loads(data.get('torrent_links'), {})
+    else:
+        # Handle individual torrent link fields
+        torrent_links = {
+            '720p': clean_value(data.get('torrent_720p')),
+            '1080p': clean_value(data.get('torrent_1080p')),
+            '2160p': clean_value(data.get('torrent_2160p'))
+        }
+    
+    # Handle rating - allow empty/null
+    rating = data.get('rating')
+    if rating in [None, '']:
+        rating = None
+    else:
+        try:
+            rating = float(rating)
+        except (ValueError, TypeError):
+            rating = None
+    
+    # Handle total_seasons for TV series
+    total_seasons = data.get('total_seasons')
+    if total_seasons in [None, '']:
+        total_seasons = None
+    else:
+        try:
+            total_seasons = int(total_seasons)
+        except (ValueError, TypeError):
+            total_seasons = None
+    
+    prepared_data = {
         'type': data.get('type'),
-        'title': data.get('title', '').strip(),
-        'description': data.get('description', '').strip() or None,
-        'thumbnail': data.get('thumbnail', '').strip() or None,
-        'release_date': data.get('release_date') or None,
-        'language': data.get('language', '').strip() or None,
-        'rating': float(data.get('rating')) if data.get('rating') not in [None, ''] else None,
+        'title': clean_value(data.get('title', '')),
+        'description': clean_value(data.get('description')),
+        'thumbnail': clean_value(data.get('thumbnail')),
+        'release_date': clean_value(data.get('release_date')),
+        'language': clean_value(data.get('language')),
+        'rating': rating,
         'cast_members': safe_json_loads(data.get('cast_members'), []),
-        'video_links': safe_json_loads(data.get('video_links'), {}),
-        'download_links': safe_json_loads(data.get('download_links'), {}),
-        'torrent_links': safe_json_loads(data.get('torrent_links'), {}),
-        'total_seasons': data.get('total_seasons'),
+        'video_links': video_links,
+        'download_links': download_links,
+        'torrent_links': torrent_links,
+        'total_seasons': total_seasons,
         'seasons': safe_json_loads(data.get('seasons')),
-        'genres': data.get('genres', [])
+        'genres': genres
     }
+    
+    print("Prepared data:", prepared_data)  # Debug log
+    return prepared_data
 
 # --- Main Public Routes ---
 @app.route("/")
@@ -291,6 +371,8 @@ def tmdb_fetch_api():
 @requires_auth
 def add_media():
     data = request.json
+    print("Received data for new media:", data)  # Debug log
+    
     if not data or not data.get('title'):
         return jsonify({"message": "Title is required"}), 400
     
@@ -309,8 +391,13 @@ def add_media():
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
-            media_data['type'], media_data['title'], media_data['description'], media_data['thumbnail'],
-            media_data['release_date'], media_data['language'], media_data['rating'],
+            media_data['type'], 
+            media_data['title'], 
+            media_data['description'], 
+            media_data['thumbnail'],
+            media_data['release_date'], 
+            media_data['language'], 
+            media_data['rating'],
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
@@ -326,12 +413,15 @@ def add_media():
         
     except (psycopg2.DatabaseError, json.JSONDecodeError, ValueError) as e:
         conn.rollback()
+        print("Error adding media:", str(e))  # Debug log
         return jsonify({"message": "Error adding media", "error": str(e)}), 400
 
 @app.route("/api/admin/media/<int:media_id>", methods=["PUT"])
 @requires_auth
 def update_media(media_id):
     data = request.json
+    print(f"Received update data for media {media_id}:", data)  # Debug log
+    
     if not data or not data.get('title'):
         return jsonify({"message": "Title is required"}), 400
     
@@ -350,8 +440,13 @@ def update_media(media_id):
                 download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s
             WHERE id = %s;
         """, (
-            media_data['type'], media_data['title'], media_data['description'], media_data['thumbnail'],
-            media_data['release_date'], media_data['language'], media_data['rating'],
+            media_data['type'], 
+            media_data['title'], 
+            media_data['description'], 
+            media_data['thumbnail'],
+            media_data['release_date'], 
+            media_data['language'], 
+            media_data['rating'],
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
@@ -366,10 +461,12 @@ def update_media(media_id):
         if cur.rowcount == 0:
             return jsonify({"message": "Media not found"}), 404
         
+        print(f"Media {media_id} updated successfully")  # Debug log
         return jsonify({"message": "Media updated successfully"}), 200
         
     except (psycopg2.DatabaseError, json.JSONDecodeError, ValueError) as e:
         conn.rollback()
+        print("Error updating media:", str(e))  # Debug log
         return jsonify({"message": "Error updating media", "error": str(e)}), 400
 
 @app.route("/api/admin/media/<int:media_id>/episode", methods=["POST"])
@@ -468,4 +565,4 @@ def internal_error(error):
 
 if __name__ == "__main__":
     # For production, set host='0.0.0.0' to allow external connections
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=False)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)  # Set debug=True for development
