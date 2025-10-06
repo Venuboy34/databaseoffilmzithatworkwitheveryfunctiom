@@ -164,9 +164,25 @@
             pointer-events: none;
         }
 
-        .empty-field {
-            border: 1px dashed #ff6b6b !important;
-            background: #5a4a4a !important;
+        .success-message {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        .debug-info {
+            background: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -177,6 +193,9 @@
         <div id="loading-error" class="error-message" style="display: none;">
             Error: Cannot load media. Please ensure the ID is valid and the backend is running.
         </div>
+
+        <div id="success-message" class="success-message" style="display: none;"></div>
+        <div id="debug-info" class="debug-info"></div>
         
         <form id="edit-media-form">
             <input type="hidden" id="media-id" name="id">
@@ -188,16 +207,16 @@
                     <input type="text" id="type" name="type" readonly>
                 </div>
                 <div class="form-group">
-                    <label for="title">Title:</label>
+                    <label for="title">Title: *</label>
                     <input type="text" id="title" name="title" required>
                 </div>
                 <div class="form-group">
                     <label for="description">Description:</label>
-                    <textarea id="description" name="description"></textarea>
+                    <textarea id="description" name="description" placeholder="Enter description..."></textarea>
                 </div>
                 <div class="form-group">
                     <label for="thumbnail">Thumbnail URL:</label>
-                    <input type="text" id="thumbnail" name="thumbnail">
+                    <input type="text" id="thumbnail" name="thumbnail" placeholder="https://example.com/poster.jpg">
                 </div>
                 <div class="form-group">
                     <label for="release_date">Release Date:</label>
@@ -205,19 +224,19 @@
                 </div>
                 <div class="form-group">
                     <label for="language">Language:</label>
-                    <input type="text" id="language" name="language">
+                    <input type="text" id="language" name="language" placeholder="en">
                 </div>
                 <div class="form-group">
                     <label for="rating">Rating:</label>
-                    <input type="number" step="0.1" id="rating" name="rating">
+                    <input type="number" step="0.1" id="rating" name="rating" placeholder="7.5" min="0" max="10">
                 </div>
                 <div class="form-group">
                     <label for="genres">Genres (comma-separated):</label>
-                    <input type="text" id="genres" name="genres">
+                    <input type="text" id="genres" name="genres" placeholder="Action, Drama, Comedy">
                 </div>
                 <div class="form-group">
                     <label for="cast_members">Cast (JSON):</label>
-                    <textarea id="cast_members" name="cast_members"></textarea>
+                    <textarea id="cast_members" name="cast_members" placeholder='[{"name": "Actor Name", "character": "Character Name"}]'></textarea>
                 </div>
             </div>
             
@@ -251,11 +270,11 @@
                     throw new Error('Media not found.');
                 }
                 const media = await response.json();
+                console.log('Loaded media data:', media);
                 populateForm(media);
             } catch (err) {
                 console.error("Failed to load media:", err);
                 document.getElementById('loading-error').style.display = 'block';
-                // Redirect after a short delay to give user time to see the error
                 setTimeout(() => {
                      window.location.href = '/admin/search_and_edit';
                 }, 3000);
@@ -263,23 +282,21 @@
         }
 
         function populateForm(media) {
+            console.log('Populating form with:', media);
+            
+            // Basic fields
             document.getElementById('type').value = media.type || '';
             document.getElementById('title').value = media.title || '';
             document.getElementById('description').value = media.description || '';
             document.getElementById('thumbnail').value = media.thumbnail || '';
-            
-            // Handle release date - preserve existing date
-            if (media.release_date) {
-                document.getElementById('release_date').value = media.release_date;
-            }
-            
+            document.getElementById('release_date').value = media.release_date || '';
             document.getElementById('language').value = media.language || '';
             document.getElementById('rating').value = media.rating || '';
             
-            // Handle genres
+            // Genres
             document.getElementById('genres').value = (media.genres && Array.isArray(media.genres)) ? media.genres.join(', ') : '';
 
-            // Handle cast_members JSON
+            // Cast members
             try {
                 document.getElementById('cast_members').value = JSON.stringify(media.cast_members || [], null, 2);
             } catch (e) {
@@ -292,71 +309,69 @@
             if (media.type === 'movie') {
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
-                        <h2>🔗 Video & Download Links</h2>
+                        <h2>🔗 Video Links</h2>
                         <div class="form-group">
-                            <label for="video_720p">Video 720p URL:</label>
-                            <input type="text" id="video_720p" name="video_720p">
+                            <label for="video_720p">720p Video URL:</label>
+                            <input type="text" id="video_720p" name="video_720p" placeholder="https://example.com/video_720p.mp4">
                         </div>
                         <div class="form-group">
-                            <label for="video_1080p">Video 1080p URL:</label>
-                            <input type="text" id="video_1080p" name="video_1080p">
+                            <label for="video_1080p">1080p Video URL:</label>
+                            <input type="text" id="video_1080p" name="video_1080p" placeholder="https://example.com/video_1080p.mp4">
                         </div>
                         <div class="form-group">
-                            <label for="video_2160p">Video 2160p URL:</label>
-                            <input type="text" id="video_2160p" name="video_2160p">
+                            <label for="video_2160p">2160p Video URL:</label>
+                            <input type="text" id="video_2160p" name="video_2160p" placeholder="https://example.com/video_2160p.mp4">
                         </div>
-                        <hr style="border-color: #555; margin: 20px 0;">
+
+                        <h2>⬇️ Download Links</h2>
                         <div class="form-group">
-                            <label for="download_720p">Download 720p URL:</label>
-                            <input type="text" id="download_720p" name="download_720p">
-                        </div>
-                        <div class="form-group">
-                            <label for="download_1080p">Download 1080p URL:</label>
-                            <input type="text" id="download_1080p" name="download_1080p">
+                            <label for="download_720p">720p Download URL:</label>
+                            <input type="text" id="download_720p" name="download_720p" placeholder="https://example.com/download_720p.mp4">
                         </div>
                         <div class="form-group">
-                            <label for="download_2160p">Download 2160p URL:</label>
-                            <input type="text" id="download_2160p" name="download_2160p">
+                            <label for="download_1080p">1080p Download URL:</label>
+                            <input type="text" id="download_1080p" name="download_1080p" placeholder="https://example.com/download_1080p.mp4">
                         </div>
-                        <hr style="border-color: #555; margin: 20px 0;">
+                        <div class="form-group">
+                            <label for="download_2160p">2160p Download URL:</label>
+                            <input type="text" id="download_2160p" name="download_2160p" placeholder="https://example.com/download_2160p.mp4">
+                        </div>
+
                         <h2>🧲 Torrent Links</h2>
                         <div class="form-group">
-                            <label for="torrent_720p">Torrent 720p URL:</label>
+                            <label for="torrent_720p">720p Torrent URL:</label>
                             <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
                         </div>
                         <div class="form-group">
-                            <label for="torrent_1080p">Torrent 1080p URL:</label>
+                            <label for="torrent_1080p">1080p Torrent URL:</label>
                             <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
                         </div>
                         <div class="form-group">
-                            <label for="torrent_2160p">Torrent 2160p URL:</label>
+                            <label for="torrent_2160p">2160p Torrent URL:</label>
                             <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:...">
                         </div>
                     </div>
                 `;
 
-                // Populate movie fields safely - handle empty values
-                if (media.video_links && typeof media.video_links === 'object') {
-                    document.getElementById('video_720p').value = media.video_links.video_720p || '';
-                    document.getElementById('video_1080p').value = media.video_links.video_1080p || '';
-                    document.getElementById('video_2160p').value = media.video_links.video_2160p || '';
+                // Populate movie links
+                if (media.video_links) {
+                    document.getElementById('video_720p').value = media.video_links['720p'] || '';
+                    document.getElementById('video_1080p').value = media.video_links['1080p'] || '';
+                    document.getElementById('video_2160p').value = media.video_links['2160p'] || '';
                 }
 
-                if (media.download_links && typeof media.download_links === 'object') {
-                    document.getElementById('download_720p').value = 
-                        (media.download_links.download_720p && media.download_links.download_720p.url) || '';
-                    document.getElementById('download_1080p').value = 
-                        (media.download_links.download_1080p && media.download_links.download_1080p.url) || '';
-                    document.getElementById('download_2160p').value = 
-                        (media.download_links.download_2160p && media.download_links.download_2160p.url) || '';
+                if (media.download_links) {
+                    document.getElementById('download_720p').value = media.download_links['720p']?.url || '';
+                    document.getElementById('download_1080p').value = media.download_links['1080p']?.url || '';
+                    document.getElementById('download_2160p').value = media.download_links['2160p']?.url || '';
                 }
 
-                // Populate torrent links
-                if (media.torrent_links && typeof media.torrent_links === 'object') {
-                    document.getElementById('torrent_720p').value = media.torrent_links.torrent_720p || '';
-                    document.getElementById('torrent_1080p').value = media.torrent_links.torrent_1080p || '';
-                    document.getElementById('torrent_2160p').value = media.torrent_links.torrent_2160p || '';
+                if (media.torrent_links) {
+                    document.getElementById('torrent_720p').value = media.torrent_links['720p'] || '';
+                    document.getElementById('torrent_1080p').value = media.torrent_links['1080p'] || '';
+                    document.getElementById('torrent_2160p').value = media.torrent_links['2160p'] || '';
                 }
+
             } else if (media.type === 'tv') {
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
@@ -366,18 +381,18 @@
                             <input type="number" id="total_seasons" name="total_seasons" value="${media.total_seasons || 0}">
                         </div>
                         
-                        <!-- TV Series Video Links -->
+                        <h2>🔗 TV Series Video Links</h2>
                         <div class="form-group">
-                            <label for="tv_video_720p">720p Video Link:</label>
-                            <input type="text" id="tv_video_720p" name="tv_video_720p" value="${media.video_links && media.video_links['720p'] ? media.video_links['720p'] : ''}">
+                            <label for="tv_video_720p">720p Video URL:</label>
+                            <input type="text" id="tv_video_720p" name="tv_video_720p" placeholder="https://example.com/series_720p/">
                         </div>
                         <div class="form-group">
-                            <label for="tv_video_1080p">1080p Video Link:</label>
-                            <input type="text" id="tv_video_1080p" name="tv_video_1080p" value="${media.video_links && media.video_links['1080p'] ? media.video_links['1080p'] : ''}">
+                            <label for="tv_video_1080p">1080p Video URL:</label>
+                            <input type="text" id="tv_video_1080p" name="tv_video_1080p" placeholder="https://example.com/series_1080p/">
                         </div>
                         <div class="form-group">
-                            <label for="tv_video_2160p">2160p Video Link:</label>
-                            <input type="text" id="tv_video_2160p" name="tv_video_2160p" value="${media.video_links && media.video_links['2160p'] ? media.video_links['2160p'] : ''}">
+                            <label for="tv_video_2160p">2160p Video URL:</label>
+                            <input type="text" id="tv_video_2160p" name="tv_video_2160p" placeholder="https://example.com/series_2160p/">
                         </div>
                         
                         <div id="seasons-container"></div>
@@ -385,7 +400,14 @@
                     </div>
                 `;
                 
-                // Populate TV series seasons
+                // Populate TV series video links
+                if (media.video_links) {
+                    document.getElementById('tv_video_720p').value = media.video_links['720p'] || '';
+                    document.getElementById('tv_video_1080p').value = media.video_links['1080p'] || '';
+                    document.getElementById('tv_video_2160p').value = media.video_links['2160p'] || '';
+                }
+                
+                // Populate seasons
                 if (media.seasons && typeof media.seasons === 'object') {
                     const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
                         const aNum = parseInt(a.split('_')[1]) || 0;
@@ -400,30 +422,6 @@
                     });
                 }
             }
-
-            // Add visual indicators for empty fields
-            highlightEmptyFields();
-        }
-
-        function highlightEmptyFields() {
-            // Highlight empty input fields
-            const inputs = document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea');
-            inputs.forEach(input => {
-                if (!input.value.trim()) {
-                    input.classList.add('empty-field');
-                } else {
-                    input.classList.remove('empty-field');
-                }
-                
-                // Update on input change
-                input.addEventListener('input', function() {
-                    if (!this.value.trim()) {
-                        this.classList.add('empty-field');
-                    } else {
-                        this.classList.remove('empty-field');
-                    }
-                });
-            });
         }
 
         function addSeason(seasonData = null) {
@@ -442,8 +440,7 @@
             `;
             container.appendChild(seasonDiv);
             
-            // Add episodes if they exist
-            if (seasonData && seasonData.episodes && Array.isArray(seasonData.episodes)) {
+            if (seasonData && seasonData.episodes) {
                 seasonData.episodes.forEach(episode => {
                     addEpisode(seasonDiv.querySelector('.btn-secondary'), episode);
                 });
@@ -465,16 +462,13 @@
             
             const episodeName = episodeData ? (episodeData.episode_name || '') : '';
             const video720p = episodeData ? (episodeData.video_720p || '') : '';
-            const download720p = episodeData ? 
-                (episodeData.download_720p && episodeData.download_720p.url ? episodeData.download_720p.url : '') : '';
-            const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
-            const download1080p = episodeData ? 
-                (episodeData.download_1080p && episodeData.download_1080p.url ? episodeData.download_1080p.url : '') : '';
-            const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
-            const download2160p = episodeData ? 
-                (episodeData.download_2160p && episodeData.download_2160p.url ? episodeData.download_2160p.url : '') : '';
+            const download720p = episodeData ? (episodeData.download_720p?.url || '') : '';
             const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
+            const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
+            const download1080p = episodeData ? (episodeData.download_1080p?.url || '') : '';
             const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
+            const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
+            const download2160p = episodeData ? (episodeData.download_2160p?.url || '') : '';
             const torrent2160p = episodeData ? (episodeData.torrent_2160p || '') : '';
             
             episodeDiv.innerHTML = `
@@ -491,9 +485,6 @@
                 <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
             `;
             episodeContainer.appendChild(episodeDiv);
-            
-            // Highlight empty fields for new episode
-            setTimeout(() => highlightEmptyFields(), 100);
         }
 
         function removeEpisode(button) {
@@ -502,7 +493,7 @@
             }
         }
 
-        // Enhanced form submission with robust error handling
+        // Enhanced form submission with debugging
         document.getElementById('edit-media-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -515,7 +506,7 @@
             const originalText = submitButton.textContent;
             submitButton.textContent = 'Updating...';
 
-            // Validate required fields
+            // Basic validation
             if (!mediaId || !mediaType || !form.title.value.trim()) {
                 alert('Media ID, type, and title are required.');
                 form.classList.remove('loading');
@@ -523,148 +514,89 @@
                 return;
             }
 
-            // Validate and parse cast_members JSON
-            let castMembers = [];
-            try {
-                const castText = form.cast_members.value.trim();
-                if (castText) {
-                    castMembers = JSON.parse(castText);
-                    if (!Array.isArray(castMembers)) {
-                        throw new Error('Cast members must be an array');
-                    }
-                }
-            } catch (e) {
-                alert('Invalid JSON format in Cast members field. Please check the format.');
-                form.classList.remove('loading');
-                submitButton.textContent = originalText;
-                return;
-            }
-
-            // Get and process genres
-            const genresInput = form.genres.value.trim();
-            const genresArray = genresInput ? genresInput.split(',').map(g => g.trim()) : [];
-            
-            // Build base data object - preserve existing values
+            // Build data object
             const data = {
                 type: mediaType,
                 title: form.title.value.trim(),
                 description: form.description.value.trim() || null,
                 thumbnail: form.thumbnail.value.trim() || null,
-                release_date: form.release_date.value || null, // This will preserve the date
+                release_date: form.release_date.value || null,
                 language: form.language.value.trim() || null,
                 rating: form.rating.value ? parseFloat(form.rating.value) : null,
-                genres: genresArray,
-                cast_members: castMembers
+                genres: form.genres.value.trim() ? form.genres.value.split(',').map(g => g.trim()) : [],
+                cast_members: JSON.parse(form.cast_members.value || '[]')
             };
 
-            // Handle movie-specific fields
+            // Handle media type specific data
             if (mediaType === 'movie') {
-                const video720p = form.video_720p ? form.video_720p.value.trim() : '';
-                const video1080p = form.video_1080p ? form.video_1080p.value.trim() : '';
-                const video2160p = form.video_2160p ? form.video_2160p.value.trim() : '';
-                const download720p = form.download_720p ? form.download_720p.value.trim() : '';
-                const download1080p = form.download_1080p ? form.download_1080p.value.trim() : '';
-                const download2160p = form.download_2160p ? form.download_2160p.value.trim() : '';
-                const torrent720p = form.torrent_720p ? form.torrent_720p.value.trim() : '';
-                const torrent1080p = form.torrent_1080p ? form.torrent_1080p.value.trim() : '';
-                const torrent2160p = form.torrent_2160p ? form.torrent_2160p.value.trim() : '';
+                data.video_720p = document.getElementById('video_720p').value.trim();
+                data.video_1080p = document.getElementById('video_1080p').value.trim();
+                data.video_2160p = document.getElementById('video_2160p').value.trim();
+                data.download_720p = document.getElementById('download_720p').value.trim();
+                data.download_1080p = document.getElementById('download_1080p').value.trim();
+                data.download_2160p = document.getElementById('download_2160p').value.trim();
+                data.torrent_720p = document.getElementById('torrent_720p').value.trim();
+                data.torrent_1080p = document.getElementById('torrent_1080p').value.trim();
+                data.torrent_2160p = document.getElementById('torrent_2160p').value.trim();
 
-                data.video_links = {
-                    '720p': video720p || null,
-                    '1080p': video1080p || null,
-                    '2160p': video2160p || null
-                };
-                
-                data.download_links = {
-                    '720p': download720p ? { url: download720p, file_type: 'webrip' } : null,
-                    '1080p': download1080p ? { url: download1080p, file_type: 'webrip' } : null,
-                    '2160p': download2160p ? { url: download2160p, file_type: 'webrip' } : null
-                };
-
-                data.torrent_links = {
-                    '720p': torrent720p || null,
-                    '1080p': torrent1080p || null,
-                    '2160p': torrent2160p || null
-                };
-                
                 data.total_seasons = null;
                 data.seasons = null;
-                
+
             } else if (mediaType === 'tv') {
+                data.tv_video_720p = document.getElementById('tv_video_720p').value.trim();
+                data.tv_video_1080p = document.getElementById('tv_video_1080p').value.trim();
+                data.tv_video_2160p = document.getElementById('tv_video_2160p').value.trim();
+
+                // Process seasons and episodes
                 const seasons = {};
                 const seasonContainers = document.querySelectorAll('.season-container');
-                let seasonCounter = 1;
                 
-                // Get TV series video links
-                const tvVideo720p = document.getElementById('tv_video_720p') ? document.getElementById('tv_video_720p').value.trim() : '';
-                const tvVideo1080p = document.getElementById('tv_video_1080p') ? document.getElementById('tv_video_1080p').value.trim() : '';
-                const tvVideo2160p = document.getElementById('tv_video_2160p') ? document.getElementById('tv_video_2160p').value.trim() : '';
-                
-                seasonContainers.forEach((seasonDiv) => {
+                seasonContainers.forEach((seasonDiv, index) => {
+                    const seasonNumber = index + 1;
                     const episodes = [];
                     const episodeRows = seasonDiv.querySelectorAll('.episode-row');
                     
-                    episodeRows.forEach((row, index) => {
-                        const episodeNumber = index + 1;
-                        const episodeName = row.querySelector(`input[placeholder="Episode Name"]`)?.value.trim() || '';
+                    episodeRows.forEach((row, epIndex) => {
+                        const episodeNumber = epIndex + 1;
+                        const episodeName = row.querySelector(`input[placeholder="Episode Name"]`).value.trim();
                         
-                        const video720p = row.querySelector(`input[placeholder="720p Video Link"]`)?.value.trim() || '';
-                        const download720p = row.querySelector(`input[placeholder="720p Download Link"]`)?.value.trim() || '';
-                        const torrent720p = row.querySelector(`input[placeholder="720p Torrent Link"]`)?.value.trim() || '';
-                        
-                        const video1080p = row.querySelector(`input[placeholder="1080p Video Link"]`)?.value.trim() || '';
-                        const download1080p = row.querySelector(`input[placeholder="1080p Download Link"]`)?.value.trim() || '';
-                        const torrent1080p = row.querySelector(`input[placeholder="1080p Torrent Link"]`)?.value.trim() || '';
-                        
-                        const video2160p = row.querySelector(`input[placeholder="2160p Video Link"]`)?.value.trim() || '';
-                        const download2160p = row.querySelector(`input[placeholder="2160p Download Link"]`)?.value.trim() || '';
-                        const torrent2160p = row.querySelector(`input[placeholder="2160p Torrent Link"]`)?.value.trim() || '';
-                        
-                        if (episodeName) { // Only add episodes with names
+                        if (episodeName) {
                             episodes.push({
                                 episode_number: episodeNumber,
                                 episode_name: episodeName,
-                                video_720p: video720p || null,
-                                download_720p: download720p ? { url: download720p, file_type: 'webrip' } : null,
-                                torrent_720p: torrent720p || null,
-                                video_1080p: video1080p || null,
-                                download_1080p: download1080p ? { url: download1080p, file_type: 'webrip' } : null,
-                                torrent_1080p: torrent1080p || null,
-                                video_2160p: video2160p || null,
-                                download_2160p: download2160p ? { url: download2160p, file_type: 'webrip' } : null,
-                                torrent_2160p: torrent2160p || null
+                                video_720p: row.querySelector(`input[placeholder="720p Video Link"]`).value.trim() || null,
+                                download_720p: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim() ? 
+                                    { url: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                torrent_720p: row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim() || null,
+                                video_1080p: row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim() || null,
+                                download_1080p: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim() ? 
+                                    { url: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                torrent_1080p: row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim() || null,
+                                video_2160p: row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim() || null,
+                                download_2160p: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim() ? 
+                                    { url: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                torrent_2160p: row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim() || null
                             });
                         }
                     });
-                    
-                    if (episodes.length > 0) { // Only add seasons with episodes
-                        seasons[`season_${seasonCounter}`] = {
-                            season_number: seasonCounter,
+
+                    if (episodes.length > 0) {
+                        seasons[`season_${seasonNumber}`] = {
+                            season_number: seasonNumber,
                             total_episodes: episodes.length,
                             episodes: episodes
                         };
-                        seasonCounter++;
                     }
                 });
-                
+
                 data.total_seasons = Object.keys(seasons).length;
                 data.seasons = Object.keys(seasons).length > 0 ? seasons : null;
-                data.video_links = {
-                    '720p': tvVideo720p || null,
-                    '1080p': tvVideo1080p || null,
-                    '2160p': tvVideo2160p || null
-                };
-                data.download_links = null;
-                data.torrent_links = null;
             }
 
-            // Final validation
-            if (!data.title) {
-                alert('Title is required.');
-                form.classList.remove('loading');
-                submitButton.textContent = originalText;
-                return;
-            }
+            // Debug: Show the data being sent
+            console.log('Sending data:', data);
+            document.getElementById('debug-info').style.display = 'block';
+            document.getElementById('debug-info').textContent = 'Sending data: ' + JSON.stringify(data, null, 2);
 
             try {
                 const response = await fetch(`${ADMIN_API_BASE_URL}/media/${mediaId}`, {
@@ -676,20 +608,20 @@
                     body: JSON.stringify(data)
                 });
 
-                let result;
-                try {
-                    result = await response.json();
-                } catch (jsonError) {
-                    result = { error: 'Server returned invalid response' };
-                }
-                
+                const result = await response.json();
+                console.log('Server response:', result);
+
                 if (response.ok) {
-                    alert('Media updated successfully!');
-                    window.location.href = '/admin/search_and_edit';
+                    document.getElementById('success-message').style.display = 'block';
+                    document.getElementById('success-message').textContent = 'Media updated successfully!';
+                    setTimeout(() => {
+                        window.location.href = '/admin/search_and_edit';
+                    }, 1500);
                 } else {
-                    alert(`Error ${response.status}: ${result.message || result.error || 'Unknown server error'}`);
+                    alert(`Error ${response.status}: ${result.message || 'Unknown error'}`);
                 }
             } catch (err) {
+                console.error('Request failed:', err);
                 alert('Network error: Unable to connect to server. Please check your connection and try again.');
             } finally {
                 form.classList.remove('loading');
