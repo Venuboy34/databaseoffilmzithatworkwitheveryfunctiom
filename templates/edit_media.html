@@ -374,24 +374,30 @@
                     </div>
                 `;
 
-                // Populate movie links
-                if (media.video_links) {
-                    document.getElementById('video_720p').value = media.video_links['720p'] || '';
-                    document.getElementById('video_1080p').value = media.video_links['1080p'] || '';
-                    document.getElementById('video_2160p').value = media.video_links['2160p'] || '';
-                }
+                // Wait for DOM to update then populate movie links
+                setTimeout(() => {
+                    if (media.video_links) {
+                        document.getElementById('video_720p').value = media.video_links['720p'] || '';
+                        document.getElementById('video_1080p').value = media.video_links['1080p'] || '';
+                        document.getElementById('video_2160p').value = media.video_links['2160p'] || '';
+                    }
 
-                if (media.download_links) {
-                    document.getElementById('download_720p').value = media.download_links['720p']?.url || '';
-                    document.getElementById('download_1080p').value = media.download_links['1080p']?.url || '';
-                    document.getElementById('download_2160p').value = media.download_links['2160p']?.url || '';
-                }
+                    if (media.download_links) {
+                        const dl720 = media.download_links['720p'];
+                        const dl1080 = media.download_links['1080p'];
+                        const dl2160 = media.download_links['2160p'];
+                        
+                        document.getElementById('download_720p').value = (typeof dl720 === 'object' ? dl720.url : dl720) || '';
+                        document.getElementById('download_1080p').value = (typeof dl1080 === 'object' ? dl1080.url : dl1080) || '';
+                        document.getElementById('download_2160p').value = (typeof dl2160 === 'object' ? dl2160.url : dl2160) || '';
+                    }
 
-                if (media.torrent_links) {
-                    document.getElementById('torrent_720p').value = media.torrent_links['720p'] || '';
-                    document.getElementById('torrent_1080p').value = media.torrent_links['1080p'] || '';
-                    document.getElementById('torrent_2160p').value = media.torrent_links['2160p'] || '';
-                }
+                    if (media.torrent_links) {
+                        document.getElementById('torrent_720p').value = media.torrent_links['720p'] || '';
+                        document.getElementById('torrent_1080p').value = media.torrent_links['1080p'] || '';
+                        document.getElementById('torrent_2160p').value = media.torrent_links['2160p'] || '';
+                    }
+                }, 100);
 
             } else if (media.type === 'tv') {
                 dynamicFieldsContainer.innerHTML = `
@@ -421,27 +427,29 @@
                     </div>
                 `;
                 
-                // Populate TV series video links
-                if (media.video_links) {
-                    document.getElementById('tv_video_720p').value = media.video_links['720p'] || '';
-                    document.getElementById('tv_video_1080p').value = media.video_links['1080p'] || '';
-                    document.getElementById('tv_video_2160p').value = media.video_links['2160p'] || '';
-                }
-                
-                // Populate seasons
-                if (media.seasons && typeof media.seasons === 'object') {
-                    const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
-                        const aNum = parseInt(a.split('_')[1]) || 0;
-                        const bNum = parseInt(b.split('_')[1]) || 0;
-                        return aNum - bNum;
-                    });
-                    seasonKeys.forEach(key => {
-                        const season = media.seasons[key];
-                        if (season) {
-                            addSeason(season);
-                        }
-                    });
-                }
+                // Wait for DOM to update then populate TV series video links
+                setTimeout(() => {
+                    if (media.video_links) {
+                        document.getElementById('tv_video_720p').value = media.video_links['720p'] || '';
+                        document.getElementById('tv_video_1080p').value = media.video_links['1080p'] || '';
+                        document.getElementById('tv_video_2160p').value = media.video_links['2160p'] || '';
+                    }
+                    
+                    // Populate seasons
+                    if (media.seasons && typeof media.seasons === 'object') {
+                        const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
+                            const aNum = parseInt(a.split('_')[1]) || 0;
+                            const bNum = parseInt(b.split('_')[1]) || 0;
+                            return aNum - bNum;
+                        });
+                        seasonKeys.forEach(key => {
+                            const season = media.seasons[key];
+                            if (season) {
+                                addSeason(season);
+                            }
+                        });
+                    }
+                }, 100);
             }
         }
 
@@ -483,17 +491,30 @@
             
             const episodeName = episodeData ? (episodeData.episode_name || '') : '';
             const video720p = episodeData ? (episodeData.video_720p || '') : '';
-            const download720p = episodeData ? (episodeData.download_720p?.url || '') : '';
-            const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
             const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
-            const download1080p = episodeData ? (episodeData.download_1080p?.url || '') : '';
-            const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
             const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
-            const download2160p = episodeData ? (episodeData.download_2160p?.url || '') : '';
+            
+            // Handle download links properly - check for both object and string formats
+            let download720p = '';
+            let download1080p = '';
+            let download2160p = '';
+            
+            if (episodeData) {
+                const dl720 = episodeData.download_720p;
+                const dl1080 = episodeData.download_1080p;
+                const dl2160 = episodeData.download_2160p;
+                
+                download720p = (typeof dl720 === 'object' && dl720 !== null) ? dl720.url : (dl720 || '');
+                download1080p = (typeof dl1080 === 'object' && dl1080 !== null) ? dl1080.url : (dl1080 || '');
+                download2160p = (typeof dl2160 === 'object' && dl2160 !== null) ? dl2160.url : (dl2160 || '');
+            }
+            
+            const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
+            const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
             const torrent2160p = episodeData ? (episodeData.torrent_2160p || '') : '';
             
             episodeDiv.innerHTML = `
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required>
+                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required style="flex-basis: 100%;">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link" value="${video720p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link" value="${download720p}">
                 <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_720p" placeholder="720p Torrent Link" value="${torrent720p}">
@@ -553,23 +574,28 @@
 
             // Handle media type specific data
             if (mediaType === 'movie') {
-                data.video_720p = document.getElementById('video_720p').value.trim();
-                data.video_1080p = document.getElementById('video_1080p').value.trim();
-                data.video_2160p = document.getElementById('video_2160p').value.trim();
-                data.download_720p = document.getElementById('download_720p').value.trim();
-                data.download_1080p = document.getElementById('download_1080p').value.trim();
-                data.download_2160p = document.getElementById('download_2160p').value.trim();
-                data.torrent_720p = document.getElementById('torrent_720p').value.trim();
-                data.torrent_1080p = document.getElementById('torrent_1080p').value.trim();
-                data.torrent_2160p = document.getElementById('torrent_2160p').value.trim();
+                data.video_720p = document.getElementById('video_720p').value.trim() || null;
+                data.video_1080p = document.getElementById('video_1080p').value.trim() || null;
+                data.video_2160p = document.getElementById('video_2160p').value.trim() || null;
+                data.download_720p = document.getElementById('download_720p').value.trim() || null;
+                data.download_1080p = document.getElementById('download_1080p').value.trim() || null;
+                data.download_2160p = document.getElementById('download_2160p').value.trim() || null;
+                data.torrent_720p = document.getElementById('torrent_720p').value.trim() || null;
+                data.torrent_1080p = document.getElementById('torrent_1080p').value.trim() || null;
+                data.torrent_2160p = document.getElementById('torrent_2160p').value.trim() || null;
 
                 data.total_seasons = null;
                 data.seasons = null;
 
             } else if (mediaType === 'tv') {
-                data.tv_video_720p = document.getElementById('tv_video_720p').value.trim();
-                data.tv_video_1080p = document.getElementById('tv_video_1080p').value.trim();
-                data.tv_video_2160p = document.getElementById('tv_video_2160p').value.trim();
+                // Get TV series video links
+                const tv720 = document.getElementById('tv_video_720p') ? document.getElementById('tv_video_720p').value.trim() : null;
+                const tv1080 = document.getElementById('tv_video_1080p') ? document.getElementById('tv_video_1080p').value.trim() : null;
+                const tv2160 = document.getElementById('tv_video_2160p') ? document.getElementById('tv_video_2160p').value.trim() : null;
+                
+                data.video_720p = tv720 || null;
+                data.video_1080p = tv1080 || null;
+                data.video_2160p = tv2160 || null;
 
                 // Process seasons and episodes
                 const seasons = {};
@@ -585,20 +611,21 @@
                         const episodeName = row.querySelector(`input[placeholder="Episode Name"]`).value.trim();
                         
                         if (episodeName) {
+                            const dl720Val = row.querySelector(`input[placeholder="720p Download Link"]`).value.trim();
+                            const dl1080Val = row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim();
+                            const dl2160Val = row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim();
+                            
                             episodes.push({
                                 episode_number: episodeNumber,
                                 episode_name: episodeName,
                                 video_720p: row.querySelector(`input[placeholder="720p Video Link"]`).value.trim() || null,
-                                download_720p: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim(), file_type: fileType } : null,
+                                download_720p: dl720Val ? { url: dl720Val, file_type: fileType } : null,
                                 torrent_720p: row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim() || null,
                                 video_1080p: row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim() || null,
-                                download_1080p: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim(), file_type: fileType } : null,
+                                download_1080p: dl1080Val ? { url: dl1080Val, file_type: fileType } : null,
                                 torrent_1080p: row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim() || null,
                                 video_2160p: row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim() || null,
-                                download_2160p: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim(), file_type: fileType } : null,
+                                download_2160p: dl2160Val ? { url: dl2160Val, file_type: fileType } : null,
                                 torrent_2160p: row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim() || null
                             });
                         }
@@ -638,14 +665,20 @@
                 if (response.ok) {
                     document.getElementById('success-message').style.display = 'block';
                     document.getElementById('success-message').textContent = 'Media updated successfully!';
+                    
+                    // Hide debug info on success
+                    document.getElementById('debug-info').style.display = 'none';
+                    
                     setTimeout(() => {
                         window.location.href = '/admin/search_and_edit';
                     }, 1500);
                 } else {
-                    alert(`Error ${response.status}: ${result.message || 'Unknown error'}`);
+                    document.getElementById('debug-info').textContent += '\n\nError Response: ' + JSON.stringify(result, null, 2);
+                    alert(`Error ${response.status}: ${result.message || 'Unknown error'}\n\nCheck debug info below for details.`);
                 }
             } catch (err) {
                 console.error('Request failed:', err);
+                document.getElementById('debug-info').textContent += '\n\nNetwork Error: ' + err.message;
                 alert('Network error: Unable to connect to server. Please check your connection and try again.');
             } finally {
                 form.classList.remove('loading');
