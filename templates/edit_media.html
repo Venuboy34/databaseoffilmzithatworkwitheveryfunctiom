@@ -52,7 +52,7 @@
             color: #b0b0b0;
         }
 
-        input[type="text"], input[type="number"], input[type="date"], textarea {
+        input[type="text"], input[type="number"], input[type="date"], select, textarea {
             width: 100%;
             padding: 12px;
             box-sizing: border-box;
@@ -63,7 +63,7 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, textarea:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
             border-color: #6a11cb;
             box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.3);
             outline: none;
@@ -234,6 +234,21 @@
                     <label for="rating">Rating:</label>
                     <input type="number" step="0.1" id="rating" name="rating" placeholder="7.5" min="0" max="10">
                 </div>
+                
+                <!-- File Type Selection -->
+                <div class="form-group">
+                    <label for="file_type">File Type:</label>
+                    <select id="file_type" name="file_type">
+                        <option value="webrip">WebRip</option>
+                        <option value="bluray">BluRay</option>
+                        <option value="webdl">WebDL</option>
+                        <option value="hdtv">HDTV</option>
+                        <option value="dvd">DVD</option>
+                        <option value="brrip">BRRip</option>
+                        <option value="bdrip">BDRip</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label for="genres">Genres (comma-separated):</label>
                     <input type="text" id="genres" name="genres" placeholder="Action, Drama, Comedy">
@@ -297,6 +312,7 @@
             document.getElementById('release_date').value = media.release_date || '';
             document.getElementById('language').value = media.language || '';
             document.getElementById('rating').value = media.rating || '';
+            document.getElementById('file_type').value = media.file_type || 'webrip';
             
             // Genres
             document.getElementById('genres').value = (media.genres && Array.isArray(media.genres)) ? media.genres.join(', ') : '';
@@ -504,6 +520,7 @@
             const form = e.target;
             const mediaId = document.getElementById('media-id').value;
             const mediaType = document.getElementById('type').value;
+            const fileType = document.getElementById('file_type').value;
 
             // Add loading state
             form.classList.add('loading');
@@ -529,6 +546,7 @@
                 release_date: form.release_date.value || null,
                 language: form.language.value.trim() || null,
                 rating: form.rating.value ? parseFloat(form.rating.value) : null,
+                file_type: fileType,
                 genres: form.genres.value.trim() ? form.genres.value.split(',').map(g => g.trim()) : [],
                 cast_members: JSON.parse(form.cast_members.value || '[]')
             };
@@ -572,15 +590,15 @@
                                 episode_name: episodeName,
                                 video_720p: row.querySelector(`input[placeholder="720p Video Link"]`).value.trim() || null,
                                 download_720p: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                    { url: row.querySelector(`input[placeholder="720p Download Link"]`).value.trim(), file_type: fileType } : null,
                                 torrent_720p: row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim() || null,
                                 video_1080p: row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim() || null,
                                 download_1080p: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                    { url: row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim(), file_type: fileType } : null,
                                 torrent_1080p: row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim() || null,
                                 video_2160p: row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim() || null,
                                 download_2160p: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim() ? 
-                                    { url: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim(), file_type: 'webrip' } : null,
+                                    { url: row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim(), file_type: fileType } : null,
                                 torrent_2160p: row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim() || null
                             });
                         }
