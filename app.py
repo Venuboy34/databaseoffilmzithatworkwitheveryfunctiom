@@ -99,7 +99,8 @@ def fetch_tmdb_data(tmdb_id, media_type):
                 'cast_members': cast,
                 'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
                 'genres': [g['name'] for g in data.get('genres', [])],
-                'video_links': video_links  # Now includes 720p, 1080p and 2160p placeholders
+                'video_links': video_links,  # Now includes 720p, 1080p and 2160p placeholders
+                'file_type': 'webrip'  # Default file type
             }
             
             return processed_data
@@ -170,12 +171,14 @@ def prepare_media_data(data):
         download_1080p = clean_value(data.get('download_1080p'))
         download_2160p = clean_value(data.get('download_2160p'))
         
+        file_type = data.get('file_type', 'webrip')
+        
         if download_720p:
-            download_links['720p'] = {'url': download_720p, 'file_type': 'webrip'}
+            download_links['720p'] = {'url': download_720p, 'file_type': file_type}
         if download_1080p:
-            download_links['1080p'] = {'url': download_1080p, 'file_type': 'webrip'}
+            download_links['1080p'] = {'url': download_1080p, 'file_type': file_type}
         if download_2160p:
-            download_links['2160p'] = {'url': download_2160p, 'file_type': 'webrip'}
+            download_links['2160p'] = {'url': download_2160p, 'file_type': file_type}
     
     # Process torrent links
     torrent_links = {}
@@ -209,6 +212,9 @@ def prepare_media_data(data):
         except (ValueError, TypeError):
             total_seasons = None
     
+    # Handle file_type
+    file_type = data.get('file_type', 'webrip')
+    
     prepared_data = {
         'type': data.get('type'),
         'title': clean_value(data.get('title', '')),
@@ -224,7 +230,8 @@ def prepare_media_data(data):
         'torrent_links': torrent_links,
         'total_seasons': total_seasons,
         'seasons': safe_json_loads(data.get('seasons')),
-        'genres': genres
+        'genres': genres,
+        'file_type': file_type
     }
     
     print("Prepared data:", prepared_data)  # Debug log
@@ -389,8 +396,8 @@ def add_media():
         cur.execute("""
             INSERT INTO media (type, title, description, thumbnail, backdrop, release_date, language, rating, 
                               cast_members, video_links, download_links, torrent_links,
-                              total_seasons, seasons, genres)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                              total_seasons, seasons, genres, file_type)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
             media_data['type'], 
@@ -407,7 +414,8 @@ def add_media():
             json.dumps(media_data['torrent_links']),
             media_data['total_seasons'], 
             json.dumps(media_data['seasons']), 
-            json.dumps(media_data['genres'])
+            json.dumps(media_data['genres']),
+            media_data['file_type']
         ))
         
         media_id = cur.fetchone()[0]
@@ -440,7 +448,7 @@ def update_media(media_id):
             UPDATE media SET
                 type = %s, title = %s, description = %s, thumbnail = %s, backdrop = %s, release_date = %s,
                 language = %s, rating = %s, cast_members = %s, video_links = %s, 
-                download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s
+                download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s, file_type = %s
             WHERE id = %s;
         """, (
             media_data['type'], 
@@ -458,6 +466,7 @@ def update_media(media_id):
             media_data['total_seasons'], 
             json.dumps(media_data['seasons']), 
             json.dumps(media_data['genres']),
+            media_data['file_type'],
             media_id
         ))
         
@@ -487,13 +496,14 @@ def add_episode(media_id):
     try:
         # Get current media data
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-        cur.execute("SELECT seasons FROM media WHERE id = %s AND type = 'tv';", (media_id,))
+        cur.execute("SELECT seasons, file_type FROM media WHERE id = %s AND type = 'tv';", (media_id,))
         media = cur.fetchone()
         
         if not media:
             return jsonify({"message": "TV series not found"}), 404
         
         current_seasons = safe_json_loads(media['seasons'], {})
+        file_type = media['file_type'] or 'webrip'
         
         # Prepare episode data
         season_number = data.get('season_number')
