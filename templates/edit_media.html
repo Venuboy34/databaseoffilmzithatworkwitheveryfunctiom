@@ -398,12 +398,13 @@
                 
                 console.log('Extracted video links:', { video720, video1080, video2160 });
                 
-                // ===== FIXED: Extract download links - handle nested object structure for ALL resolutions =====
+                // ===== FIXED: Extract download links - YOUR DATABASE FORMAT =====
                 let download720 = '';
                 let download1080 = '';
                 let download2160 = '';
                 
                 if (media.download_links && typeof media.download_links === 'object') {
+                    // Check for download_720p, download_1080p, download_2160p keys (your format)
                     const dl720 = media.download_links['download_720p'] || media.download_links['720p'];
                     const dl1080 = media.download_links['download_1080p'] || media.download_links['1080p'];
                     const dl2160 = media.download_links['download_2160p'] || media.download_links['2160p'];
