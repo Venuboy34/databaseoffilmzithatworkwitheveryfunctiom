@@ -375,29 +375,47 @@
                 `;
 
                 // Wait for DOM to update then populate movie links
-                setTimeout(() => {
-                    if (media.video_links) {
-                        document.getElementById('video_720p').value = media.video_links['720p'] || '';
-                        document.getElementById('video_1080p').value = media.video_links['1080p'] || '';
-                        document.getElementById('video_2160p').value = media.video_links['2160p'] || '';
-                    }
-
-                    if (media.download_links) {
-                        const dl720 = media.download_links['720p'];
-                        const dl1080 = media.download_links['1080p'];
-                        const dl2160 = media.download_links['2160p'];
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        console.log('Populating movie links with:', media.video_links, media.download_links, media.torrent_links);
                         
-                        document.getElementById('download_720p').value = (typeof dl720 === 'object' ? dl720.url : dl720) || '';
-                        document.getElementById('download_1080p').value = (typeof dl1080 === 'object' ? dl1080.url : dl1080) || '';
-                        document.getElementById('download_2160p').value = (typeof dl2160 === 'object' ? dl2160.url : dl2160) || '';
-                    }
+                        if (media.video_links) {
+                            const v720 = document.getElementById('video_720p');
+                            const v1080 = document.getElementById('video_1080p');
+                            const v2160 = document.getElementById('video_2160p');
+                            
+                            if (v720) v720.value = media.video_links['720p'] || '';
+                            if (v1080) v1080.value = media.video_links['1080p'] || '';
+                            if (v2160) v2160.value = media.video_links['2160p'] || '';
+                        }
 
-                    if (media.torrent_links) {
-                        document.getElementById('torrent_720p').value = media.torrent_links['720p'] || '';
-                        document.getElementById('torrent_1080p').value = media.torrent_links['1080p'] || '';
-                        document.getElementById('torrent_2160p').value = media.torrent_links['2160p'] || '';
-                    }
-                }, 100);
+                        if (media.download_links) {
+                            const dl720 = media.download_links['720p'];
+                            const dl1080 = media.download_links['1080p'];
+                            const dl2160 = media.download_links['2160p'];
+                            
+                            const d720 = document.getElementById('download_720p');
+                            const d1080 = document.getElementById('download_1080p');
+                            const d2160 = document.getElementById('download_2160p');
+                            
+                            if (d720) d720.value = (typeof dl720 === 'object' && dl720 ? dl720.url : dl720) || '';
+                            if (d1080) d1080.value = (typeof dl1080 === 'object' && dl1080 ? dl1080.url : dl1080) || '';
+                            if (d2160) d2160.value = (typeof dl2160 === 'object' && dl2160 ? dl2160.url : dl2160) || '';
+                        }
+
+                        if (media.torrent_links) {
+                            const t720 = document.getElementById('torrent_720p');
+                            const t1080 = document.getElementById('torrent_1080p');
+                            const t2160 = document.getElementById('torrent_2160p');
+                            
+                            if (t720) t720.value = media.torrent_links['720p'] || '';
+                            if (t1080) t1080.value = media.torrent_links['1080p'] || '';
+                            if (t2160) t2160.value = media.torrent_links['2160p'] || '';
+                        }
+                        
+                        console.log('Movie links populated successfully');
+                    });
+                });
 
             } else if (media.type === 'tv') {
                 dynamicFieldsContainer.innerHTML = `
@@ -428,28 +446,38 @@
                 `;
                 
                 // Wait for DOM to update then populate TV series video links
-                setTimeout(() => {
-                    if (media.video_links) {
-                        document.getElementById('tv_video_720p').value = media.video_links['720p'] || '';
-                        document.getElementById('tv_video_1080p').value = media.video_links['1080p'] || '';
-                        document.getElementById('tv_video_2160p').value = media.video_links['2160p'] || '';
-                    }
-                    
-                    // Populate seasons
-                    if (media.seasons && typeof media.seasons === 'object') {
-                        const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
-                            const aNum = parseInt(a.split('_')[1]) || 0;
-                            const bNum = parseInt(b.split('_')[1]) || 0;
-                            return aNum - bNum;
-                        });
-                        seasonKeys.forEach(key => {
-                            const season = media.seasons[key];
-                            if (season) {
-                                addSeason(season);
-                            }
-                        });
-                    }
-                }, 100);
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        console.log('Populating TV links with:', media.video_links);
+                        
+                        if (media.video_links) {
+                            const tv720 = document.getElementById('tv_video_720p');
+                            const tv1080 = document.getElementById('tv_video_1080p');
+                            const tv2160 = document.getElementById('tv_video_2160p');
+                            
+                            if (tv720) tv720.value = media.video_links['720p'] || '';
+                            if (tv1080) tv1080.value = media.video_links['1080p'] || '';
+                            if (tv2160) tv2160.value = media.video_links['2160p'] || '';
+                        }
+                        
+                        // Populate seasons
+                        if (media.seasons && typeof media.seasons === 'object') {
+                            const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
+                                const aNum = parseInt(a.split('_')[1]) || 0;
+                                const bNum = parseInt(b.split('_')[1]) || 0;
+                                return aNum - bNum;
+                            });
+                            seasonKeys.forEach(key => {
+                                const season = media.seasons[key];
+                                if (season) {
+                                    addSeason(season);
+                                }
+                            });
+                        }
+                        
+                        console.log('TV links populated successfully');
+                    });
+                });
             }
         }
 
@@ -663,15 +691,21 @@
                 console.log('Server response:', result);
 
                 if (response.ok) {
-                    document.getElementById('success-message').style.display = 'block';
-                    document.getElementById('success-message').textContent = 'Media updated successfully!';
+                    // Show success message
+                    const successMsg = document.getElementById('success-message');
+                    successMsg.style.display = 'block';
+                    successMsg.textContent = '✅ Media updated successfully!';
                     
                     // Hide debug info on success
                     document.getElementById('debug-info').style.display = 'none';
                     
+                    // Scroll to top to show success message
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    
+                    // Redirect after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/admin/search_and_edit';
-                    }, 1500);
+                    }, 2000);
                 } else {
                     document.getElementById('debug-info').textContent += '\n\nError Response: ' + JSON.stringify(result, null, 2);
                     alert(`Error ${response.status}: ${result.message || 'Unknown error'}\n\nCheck debug info below for details.`);
