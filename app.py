@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from base64 import b64decode
 from flask_cors import CORS
+from datetime import date, datetime
 
 app = Flask(__name__)
 
@@ -138,6 +139,20 @@ def clean_value(value):
         return value if value else None
     return value
 
+def format_date_for_input(date_value):
+    """Format date for HTML date input (YYYY-MM-DD)"""
+    if not date_value:
+        return None
+    
+    if isinstance(date_value, str):
+        # If it's already a string, keep first 10 chars (YYYY-MM-DD)
+        return date_value[:10] if len(date_value) >= 10 else date_value
+    elif isinstance(date_value, (date, datetime)):
+        # If it's a date/datetime object, format it
+        return date_value.strftime('%Y-%m-%d')
+    
+    return None
+
 def prepare_media_data(data):
     """Prepare and validate media data before database operations"""
     print("Raw data received:", data)  # Debug log
@@ -156,9 +171,9 @@ def prepare_media_data(data):
     else:
         # Handle individual video link fields
         video_links = {
-            '720p': clean_value(data.get('video_720p')),
-            '1080p': clean_value(data.get('video_1080p')),
-            '2160p': clean_value(data.get('video_2160p'))
+            '720p': clean_value(data.get('video_720p')) or clean_value(data.get('tv_video_720p')),
+            '1080p': clean_value(data.get('video_1080p')) or clean_value(data.get('tv_video_1080p')),
+            '2160p': clean_value(data.get('video_2160p')) or clean_value(data.get('tv_video_2160p'))
         }
     
     # Process download links
@@ -308,6 +323,10 @@ def get_all_media():
         media_list = []
         for row in media:
             media_dict = dict(row)
+            
+            # Format date properly
+            media_dict['release_date'] = format_date_for_input(media_dict.get('release_date'))
+            
             # Parse JSON fields
             media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
             media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
@@ -334,6 +353,10 @@ def get_single_media(media_id):
         
         if media:
             media_dict = dict(media)
+            
+            # Format date properly for HTML date input
+            media_dict['release_date'] = format_date_for_input(media_dict.get('release_date'))
+            
             # Parse JSON fields for frontend
             media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
             media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
@@ -341,6 +364,9 @@ def get_single_media(media_id):
             media_dict['torrent_links'] = safe_json_loads(media_dict.get('torrent_links'), {})
             media_dict['seasons'] = safe_json_loads(media_dict.get('seasons'))
             media_dict['genres'] = safe_json_loads(media_dict.get('genres'), [])
+            
+            print(f"Sending media data for ID {media_id}:", media_dict)  # Debug log
+            
             return jsonify(media_dict)
         
         return jsonify({"message": "Media not found"}), 404
@@ -579,4 +605,4 @@ def internal_error(error):
 
 if __name__ == "__main__":
     # For production, set host='0.0.0.0' to allow external connections
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)  # Set debug=True for development
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
