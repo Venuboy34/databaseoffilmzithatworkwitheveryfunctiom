@@ -164,14 +164,12 @@ def prepare_media_data(data):
     elif genres is None:
         genres = []
     
-    # ===== FIXED: Process video links with correct keys =====
+    # ===== Process video links =====
     video_links = {}
     if data.get('video_links'):
         video_links = safe_json_loads(data.get('video_links'), {})
     else:
-        # Handle individual video link fields - store with video_720p, video_1080p, video_2160p keys
-        file_type = data.get('file_type', 'webrip')
-        
+        # Handle individual video link fields
         video_720p = clean_value(data.get('video_720p')) or clean_value(data.get('tv_video_720p'))
         video_1080p = clean_value(data.get('video_1080p')) or clean_value(data.get('tv_video_1080p'))
         video_2160p = clean_value(data.get('video_2160p')) or clean_value(data.get('tv_video_2160p'))
@@ -183,30 +181,32 @@ def prepare_media_data(data):
         if video_2160p:
             video_links['video_2160p'] = video_2160p
     
-    # ===== FIXED: Process download links with correct keys (download_720p, download_1080p, download_2160p) =====
+    # ===== Process download links as NESTED OBJECTS (matches your database) =====
     download_links = {}
     if data.get('download_links'):
         download_links = safe_json_loads(data.get('download_links'), {})
     else:
-        # Handle individual download link fields
+        # Handle individual download link fields - store as nested objects
         download_720p = clean_value(data.get('download_720p'))
         download_1080p = clean_value(data.get('download_1080p'))
         download_2160p = clean_value(data.get('download_2160p'))
         
-        # Store with download_720p, download_1080p, download_2160p keys as direct URLs
+        file_type = data.get('file_type', 'webrip')
+        
+        # Store with download_720p, download_1080p, download_2160p keys as nested objects
         if download_720p:
-            download_links['download_720p'] = download_720p
+            download_links['download_720p'] = {'url': download_720p, 'file_type': file_type}
         if download_1080p:
-            download_links['download_1080p'] = download_1080p
+            download_links['download_1080p'] = {'url': download_1080p, 'file_type': file_type}
         if download_2160p:
-            download_links['download_2160p'] = download_2160p
+            download_links['download_2160p'] = {'url': download_2160p, 'file_type': file_type}
     
-    # ===== FIXED: Process torrent links with correct keys =====
+    # ===== Process torrent links =====
     torrent_links = {}
     if data.get('torrent_links'):
         torrent_links = safe_json_loads(data.get('torrent_links'), {})
     else:
-        # Handle individual torrent link fields - store with torrent_720p, torrent_1080p, torrent_2160p keys
+        # Handle individual torrent link fields
         torrent_720p = clean_value(data.get('torrent_720p'))
         torrent_1080p = clean_value(data.get('torrent_1080p'))
         torrent_2160p = clean_value(data.get('torrent_2160p'))
