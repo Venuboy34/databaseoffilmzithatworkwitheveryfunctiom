@@ -193,15 +193,13 @@ def prepare_media_data(data):
         download_1080p = clean_value(data.get('download_1080p'))
         download_2160p = clean_value(data.get('download_2160p'))
         
-        file_type = data.get('file_type', 'webrip')
-        
-        # Store with download_720p, download_1080p, download_2160p keys to match your database
+        # Store with download_720p, download_1080p, download_2160p keys as direct URLs
         if download_720p:
-            download_links['download_720p'] = {'url': download_720p, 'file_type': file_type}
+            download_links['download_720p'] = download_720p
         if download_1080p:
-            download_links['download_1080p'] = {'url': download_1080p, 'file_type': file_type}
+            download_links['download_1080p'] = download_1080p
         if download_2160p:
-            download_links['download_2160p'] = {'url': download_2160p, 'file_type': file_type}
+            download_links['download_2160p'] = download_2160p
     
     # ===== FIXED: Process torrent links with correct keys =====
     torrent_links = {}
