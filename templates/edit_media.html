@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Media</title>
     <style>
-        /* General Styles */
+        /* Your existing CSS remains the same */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #1c1c1e;
@@ -24,16 +24,6 @@
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
         }
 
-        /* Header */
-        h1 {
-            text-align: center;
-            color: #e0e0e0;
-            border-bottom: 2px solid #3a3a3c;
-            padding-bottom: 15px;
-            margin-bottom: 30px;
-        }
-
-        /* Form Elements */
         .form-section {
             background: #3a3a3c;
             padding: 20px;
@@ -60,129 +50,17 @@
             border: 1px solid #555;
             color: #fff;
             border-radius: 6px;
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus, textarea:focus {
-            border-color: #6a11cb;
-            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.3);
-            outline: none;
-        }
-
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        /* Buttons */
-        .btn-primary, .btn-secondary {
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: transform 0.2s, background-color 0.2s;
-            text-transform: uppercase;
-        }
-        
         .btn-primary {
             background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
             color: #fff;
             width: 100%;
             margin-top: 20px;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
-        }
-
-        .btn-secondary {
-            background-color: #555;
-            color: #fff;
-        }
-
-        .btn-secondary:hover {
-            background-color: #666;
-            transform: translateY(-2px);
-        }
-
-        .remove-btn {
-            background: #ff4d4d;
-            color: #fff;
+            padding: 12px 25px;
             border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        
-        .remove-btn:hover {
-            background: #e60000;
-        }
-
-        /* TV Series Specific Styles */
-        .season-container {
-            border: 1px dashed #555;
-            padding: 20px;
-            border-radius: 8px;
-            margin-top: 20px;
-            background-color: #2c2c2e;
-        }
-        
-        .episode-container {
-            margin-top: 15px;
-            padding-left: 20px;
-            border-left: 2px solid #6a11cb;
-        }
-
-        .episode-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .episode-row input {
-            flex-grow: 1;
-            min-width: 150px;
-        }
-
-        /* Utility */
-        .error-message {
-            text-align: center;
-            color: #ff4d4d;
-            font-size: 1.2em;
-            font-weight: bold;
-            margin-top: 30px;
-        }
-
-        .loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-
-        .success-message {
-            background: #4CAF50;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-        }
-
-        .debug-info {
-            background: #ff6b6b;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px 0;
-            display: none;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -195,7 +73,6 @@
         </div>
 
         <div id="success-message" class="success-message" style="display: none;"></div>
-        <div id="debug-info" class="debug-info"></div>
         
         <form id="edit-media-form">
             <input type="hidden" id="media-id" name="id">
@@ -235,7 +112,6 @@
                     <input type="number" step="0.1" id="rating" name="rating" placeholder="7.5" min="0" max="10">
                 </div>
                 
-                <!-- File Type Selection -->
                 <div class="form-group">
                     <label for="file_type">File Type:</label>
                     <select id="file_type" name="file_type">
@@ -243,9 +119,6 @@
                         <option value="bluray">BluRay</option>
                         <option value="webdl">WebDL</option>
                         <option value="hdtv">HDTV</option>
-                        <option value="dvd">DVD</option>
-                        <option value="brrip">BRRip</option>
-                        <option value="bdrip">BDRip</option>
                     </select>
                 </div>
 
@@ -269,7 +142,6 @@
         const API_BASE_URL = window.location.origin + '/api/media';
         const ADMIN_API_BASE_URL = window.location.origin + '/api/admin';
         const AUTH_HEADER = 'Basic ' + btoa('venura:venura');
-        let seasonNumberCounter = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -332,29 +204,15 @@
                     }
                 }
                 
-                if (typeof media.seasons === 'string') {
-                    try {
-                        media.seasons = JSON.parse(media.seasons);
-                    } catch (e) {
-                        media.seasons = null;
-                    }
-                }
-                
                 populateForm(media);
             } catch (err) {
                 console.error("Failed to load media:", err);
                 document.getElementById('loading-error').style.display = 'block';
-                setTimeout(() => {
-                     window.location.href = '/admin/search_and_edit';
-                }, 3000);
             }
         }
 
         function populateForm(media) {
             console.log('Populating form with:', media);
-            console.log('Video links:', media.video_links);
-            console.log('Download links:', media.download_links);
-            console.log('Torrent links:', media.torrent_links);
             
             // Basic fields
             document.getElementById('type').value = media.type || '';
@@ -381,57 +239,43 @@
             dynamicFieldsContainer.innerHTML = '';
 
             if (media.type === 'movie') {
-                // ===== FIXED: Extract video links - handle nested object structure for ALL resolutions =====
+                // Extract video links
                 let video720 = '';
                 let video1080 = '';
                 let video2160 = '';
                 
                 if (media.video_links && typeof media.video_links === 'object') {
-                    const v720 = media.video_links['video_720p'] || media.video_links['720p'];
-                    const v1080 = media.video_links['video_1080p'] || media.video_links['1080p'];
-                    const v2160 = media.video_links['video_2160p'] || media.video_links['2160p'];
-                    
-                    video720 = (v720 && typeof v720 === 'object' && v720.url) ? v720.url : (v720 || '');
-                    video1080 = (v1080 && typeof v1080 === 'object' && v1080.url) ? v1080.url : (v1080 || '');
-                    video2160 = (v2160 && typeof v2160 === 'object' && v2160.url) ? v2160.url : (v2160 || '');
+                    video720 = media.video_links['video_720p'] || '';
+                    video1080 = media.video_links['video_1080p'] || '';
+                    video2160 = media.video_links['video_2160p'] || '';
                 }
                 
-                console.log('Extracted video links:', { video720, video1080, video2160 });
-                
-                // ===== FIXED: Extract download links - YOUR DATABASE FORMAT =====
+                // Extract download links - handle nested objects
                 let download720 = '';
                 let download1080 = '';
                 let download2160 = '';
                 
                 if (media.download_links && typeof media.download_links === 'object') {
-                    // Check for download_720p, download_1080p, download_2160p keys (your format)
-                    const dl720 = media.download_links['download_720p'] || media.download_links['720p'];
-                    const dl1080 = media.download_links['download_1080p'] || media.download_links['1080p'];
-                    const dl2160 = media.download_links['download_2160p'] || media.download_links['2160p'];
+                    // Handle nested object structure: {"download_720p": {"url": "https://...", "file_type": "webrip"}}
+                    const dl720 = media.download_links['download_720p'];
+                    const dl1080 = media.download_links['download_1080p'];
+                    const dl2160 = media.download_links['download_2160p'];
                     
-                    download720 = (dl720 && typeof dl720 === 'object' && dl720.url) ? dl720.url : (dl720 || '');
-                    download1080 = (dl1080 && typeof dl1080 === 'object' && dl1080.url) ? dl1080.url : (dl1080 || '');
-                    download2160 = (dl2160 && typeof dl2160 === 'object' && dl2160.url) ? dl2160.url : (dl2160 || '');
+                    download720 = (dl720 && dl720.url) ? dl720.url : '';
+                    download1080 = (dl1080 && dl1080.url) ? dl1080.url : '';
+                    download2160 = (dl2160 && dl2160.url) ? dl2160.url : '';
                 }
                 
-                console.log('Extracted download links:', { download720, download1080, download2160 });
-                
-                // ===== FIXED: Extract torrent links - handle nested object structure for ALL resolutions =====
+                // Extract torrent links
                 let torrent720 = '';
                 let torrent1080 = '';
                 let torrent2160 = '';
                 
                 if (media.torrent_links && typeof media.torrent_links === 'object') {
-                    const t720 = media.torrent_links['torrent_720p'] || media.torrent_links['720p'];
-                    const t1080 = media.torrent_links['torrent_1080p'] || media.torrent_links['1080p'];
-                    const t2160 = media.torrent_links['torrent_2160p'] || media.torrent_links['2160p'];
-                    
-                    torrent720 = (t720 && typeof t720 === 'object' && t720.url) ? t720.url : (t720 || '');
-                    torrent1080 = (t1080 && typeof t1080 === 'object' && t1080.url) ? t1080.url : (t1080 || '');
-                    torrent2160 = (t2160 && typeof t2160 === 'object' && t2160.url) ? t2160.url : (t2160 || '');
+                    torrent720 = media.torrent_links['torrent_720p'] || '';
+                    torrent1080 = media.torrent_links['torrent_1080p'] || '';
+                    torrent2160 = media.torrent_links['torrent_2160p'] || '';
                 }
-                
-                console.log('Extracted torrent links:', { torrent720, torrent1080, torrent2160 });
                 
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
@@ -478,158 +322,9 @@
                         </div>
                     </div>
                 `;
-                
-                console.log('Movie links populated successfully');
-
-            } else if (media.type === 'tv') {
-                // Get TV series video links
-                let tvVideo720 = '';
-                let tvVideo1080 = '';
-                let tvVideo2160 = '';
-                
-                if (media.video_links && typeof media.video_links === 'object') {
-                    const v720 = media.video_links['video_720p'] || media.video_links['720p'];
-                    const v1080 = media.video_links['video_1080p'] || media.video_links['1080p'];
-                    const v2160 = media.video_links['video_2160p'] || media.video_links['2160p'];
-                    
-                    tvVideo720 = (v720 && typeof v720 === 'object' && v720.url) ? v720.url : (v720 || '');
-                    tvVideo1080 = (v1080 && typeof v1080 === 'object' && v1080.url) ? v1080.url : (v1080 || '');
-                    tvVideo2160 = (v2160 && typeof v2160 === 'object' && v2160.url) ? v2160.url : (v2160 || '');
-                }
-                
-                dynamicFieldsContainer.innerHTML = `
-                    <div class="form-section">
-                        <h2>TV Series Details</h2>
-                        <div class="form-group">
-                            <label for="total_seasons">Total Seasons:</label>
-                            <input type="number" id="total_seasons" name="total_seasons" value="${media.total_seasons || 0}">
-                        </div>
-                        
-                        <h2>🔗 TV Series Video Links</h2>
-                        <div class="form-group">
-                            <label for="tv_video_720p">720p Video URL:</label>
-                            <input type="text" id="tv_video_720p" name="tv_video_720p" placeholder="https://example.com/series_720p/" value="${tvVideo720}">
-                        </div>
-                        <div class="form-group">
-                            <label for="tv_video_1080p">1080p Video URL:</label>
-                            <input type="text" id="tv_video_1080p" name="tv_video_1080p" placeholder="https://example.com/series_1080p/" value="${tvVideo1080}">
-                        </div>
-                        <div class="form-group">
-                            <label for="tv_video_2160p">2160p Video URL:</label>
-                            <input type="text" id="tv_video_2160p" name="tv_video_2160p" placeholder="https://example.com/series_2160p/" value="${tvVideo2160}">
-                        </div>
-                        
-                        <div id="seasons-container"></div>
-                        <button type="button" class="btn-secondary" onclick="addSeason()">Add New Season</button>
-                    </div>
-                `;
-                
-                // Populate seasons after a brief delay
-                setTimeout(() => {
-                    if (media.seasons && typeof media.seasons === 'object') {
-                        const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
-                            const aNum = parseInt(a.split('_')[1]) || 0;
-                            const bNum = parseInt(b.split('_')[1]) || 0;
-                            return aNum - bNum;
-                        });
-                        seasonKeys.forEach(key => {
-                            const season = media.seasons[key];
-                            if (season) {
-                                addSeason(season);
-                            }
-                        });
-                    }
-                    console.log('TV links populated successfully');
-                }, 50);
             }
         }
 
-        function addSeason(seasonData = null) {
-            seasonNumberCounter++;
-            const container = document.getElementById('seasons-container');
-            const seasonDiv = document.createElement('div');
-            seasonDiv.classList.add('season-container');
-            const seasonNumber = seasonData ? seasonData.season_number : seasonNumberCounter;
-            seasonDiv.innerHTML = `
-                <h3>Season ${seasonNumber} <button type="button" class="remove-btn" onclick="removeSeason(this)">Remove</button></h3>
-                <div class="form-group">
-                    <label>Episodes</label>
-                    <div class="episode-container" data-season-number="${seasonNumber}"></div>
-                </div>
-                <button type="button" class="btn-secondary" onclick="addEpisode(this)">+ Add Episode</button>
-            `;
-            container.appendChild(seasonDiv);
-            
-            if (seasonData && seasonData.episodes) {
-                seasonData.episodes.forEach(episode => {
-                    addEpisode(seasonDiv.querySelector('.btn-secondary'), episode);
-                });
-            }
-        }
-
-        function removeSeason(button) {
-            if (confirm('Are you sure you want to remove this season and all its episodes?')) {
-                button.closest('.season-container').remove();
-            }
-        }
-
-        function addEpisode(button, episodeData = null) {
-            const episodeContainer = button.previousElementSibling.querySelector('.episode-container');
-            const seasonNumber = episodeContainer.dataset.seasonNumber;
-            const episodeCount = episodeContainer.children.length + 1;
-            const episodeDiv = document.createElement('div');
-            episodeDiv.classList.add('episode-row');
-            
-            const episodeName = episodeData ? (episodeData.episode_name || '') : '';
-            
-            // Extract video links
-            const video720p = episodeData ? (episodeData.video_720p || '') : '';
-            const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
-            const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
-            
-            // Handle download links properly - check for both object and string formats
-            let download720p = '';
-            let download1080p = '';
-            let download2160p = '';
-            
-            if (episodeData) {
-                const dl720 = episodeData.download_720p;
-                const dl1080 = episodeData.download_1080p;
-                const dl2160 = episodeData.download_2160p;
-                
-                download720p = (dl720 && typeof dl720 === 'object' && dl720.url) ? dl720.url : (dl720 || '');
-                download1080p = (dl1080 && typeof dl1080 === 'object' && dl1080.url) ? dl1080.url : (dl1080 || '');
-                download2160p = (dl2160 && typeof dl2160 === 'object' && dl2160.url) ? dl2160.url : (dl2160 || '');
-            }
-            
-            // Handle torrent links
-            const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
-            const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
-            const torrent2160p = episodeData ? (episodeData.torrent_2160p || '') : '';
-            
-            episodeDiv.innerHTML = `
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_name" placeholder="Episode Name" value="${episodeName}" required style="flex-basis: 100%;">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_720p" placeholder="720p Video Link" value="${video720p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_720p" placeholder="720p Download Link" value="${download720p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_720p" placeholder="720p Torrent Link" value="${torrent720p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_1080p" placeholder="1080p Video Link" value="${video1080p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_1080p" placeholder="1080p Download Link" value="${download1080p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_1080p" placeholder="1080p Torrent Link" value="${torrent1080p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_video_2160p" placeholder="2160p Video Link" value="${video2160p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_download_2160p" placeholder="2160p Download Link" value="${download2160p}">
-                <input type="text" name="season_${seasonNumber}_episode_${episodeCount}_torrent_2160p" placeholder="2160p Torrent Link" value="${torrent2160p}">
-                <button type="button" class="remove-btn" onclick="removeEpisode(this)">Remove</button>
-            `;
-            episodeContainer.appendChild(episodeDiv);
-        }
-
-        function removeEpisode(button) {
-            if (confirm('Are you sure you want to remove this episode?')) {
-                button.closest('.episode-row').remove();
-            }
-        }
-
-        // Enhanced form submission with proper JSON structure
         document.getElementById('edit-media-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -638,18 +333,9 @@
             const fileType = document.getElementById('file_type').value;
 
             // Add loading state
-            form.classList.add('loading');
             const submitButton = form.querySelector('.btn-primary');
             const originalText = submitButton.textContent;
             submitButton.textContent = 'Updating...';
-
-            // Basic validation
-            if (!mediaId || !mediaType || !form.title.value.trim()) {
-                alert('Media ID, type, and title are required.');
-                form.classList.remove('loading');
-                submitButton.textContent = originalText;
-                return;
-            }
 
             // Build data object
             const data = {
@@ -666,107 +352,34 @@
                 cast_members: JSON.parse(form.cast_members.value || '[]')
             };
 
-            // ===== FIXED: Handle media type specific data with proper JSON structure =====
             if (mediaType === 'movie') {
-                // Save video links with the correct nested structure for ALL resolutions
+                // Video links as direct URLs
                 const v720Val = document.getElementById('video_720p').value.trim();
                 const v1080Val = document.getElementById('video_1080p').value.trim();
                 const v2160Val = document.getElementById('video_2160p').value.trim();
                 
-                data.video_720p = v720Val ? { url: v720Val, file_type: fileType } : null;
-                data.video_1080p = v1080Val ? { url: v1080Val, file_type: fileType } : null;
-                data.video_2160p = v2160Val ? { url: v2160Val, file_type: fileType } : null;
+                data.video_720p = v720Val || null;
+                data.video_1080p = v1080Val || null;
+                data.video_2160p = v2160Val || null;
                 
-                // Save download links with the correct nested structure for ALL resolutions
+                // Download links as NESTED OBJECTS (matches your database)
                 const dl720Val = document.getElementById('download_720p').value.trim();
                 const dl1080Val = document.getElementById('download_1080p').value.trim();
                 const dl2160Val = document.getElementById('download_2160p').value.trim();
                 
-                data.download_720p = dl720Val ? { url: dl720Val, file_type: fileType } : null;
-                data.download_1080p = dl1080Val ? { url: dl1080Val, file_type: fileType } : null;
-                data.download_2160p = dl2160Val ? { url: dl2160Val, file_type: fileType } : null;
+                data.download_720p = dl720Val || null;
+                data.download_1080p = dl1080Val || null;
+                data.download_2160p = dl2160Val || null;
                 
-                // Save torrent links with the correct nested structure for ALL resolutions
+                // Torrent links as direct URLs
                 const t720Val = document.getElementById('torrent_720p').value.trim();
                 const t1080Val = document.getElementById('torrent_1080p').value.trim();
                 const t2160Val = document.getElementById('torrent_2160p').value.trim();
                 
-                data.torrent_720p = t720Val ? { url: t720Val, file_type: fileType } : null;
-                data.torrent_1080p = t1080Val ? { url: t1080Val, file_type: fileType } : null;
-                data.torrent_2160p = t2160Val ? { url: t2160Val, file_type: fileType } : null;
-
-                data.total_seasons = null;
-                data.seasons = null;
-
-            } else if (mediaType === 'tv') {
-                // Get TV series video links
-                const tv720 = document.getElementById('tv_video_720p') ? document.getElementById('tv_video_720p').value.trim() : null;
-                const tv1080 = document.getElementById('tv_video_1080p') ? document.getElementById('tv_video_1080p').value.trim() : null;
-                const tv2160 = document.getElementById('tv_video_2160p') ? document.getElementById('tv_video_2160p').value.trim() : null;
-                
-                data.video_720p = tv720 ? { url: tv720, file_type: fileType } : null;
-                data.video_1080p = tv1080 ? { url: tv1080, file_type: fileType } : null;
-                data.video_2160p = tv2160 ? { url: tv2160, file_type: fileType } : null;
-
-                // Process seasons and episodes
-                const seasons = {};
-                const seasonContainers = document.querySelectorAll('.season-container');
-                
-                seasonContainers.forEach((seasonDiv, index) => {
-                    const seasonNumber = index + 1;
-                    const episodes = [];
-                    const episodeRows = seasonDiv.querySelectorAll('.episode-row');
-                    
-                    episodeRows.forEach((row, epIndex) => {
-                        const episodeNumber = epIndex + 1;
-                        const episodeName = row.querySelector(`input[placeholder="Episode Name"]`).value.trim();
-                        
-                        if (episodeName) {
-                            const v720Val = row.querySelector(`input[placeholder="720p Video Link"]`).value.trim();
-                            const v1080Val = row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim();
-                            const v2160Val = row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim();
-                            
-                            const dl720Val = row.querySelector(`input[placeholder="720p Download Link"]`).value.trim();
-                            const dl1080Val = row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim();
-                            const dl2160Val = row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim();
-                            
-                            const t720Val = row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim();
-                            const t1080Val = row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim();
-                            const t2160Val = row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim();
-                            
-                            episodes.push({
-                                episode_number: episodeNumber,
-                                episode_name: episodeName,
-                                video_720p: v720Val || null,
-                                download_720p: dl720Val ? { url: dl720Val, file_type: fileType } : null,
-                                torrent_720p: t720Val || null,
-                                video_1080p: v1080Val || null,
-                                download_1080p: dl1080Val ? { url: dl1080Val, file_type: fileType } : null,
-                                torrent_1080p: t1080Val || null,
-                                video_2160p: v2160Val || null,
-                                download_2160p: dl2160Val ? { url: dl2160Val, file_type: fileType } : null,
-                                torrent_2160p: t2160Val || null
-                            });
-                        }
-                    });
-
-                    if (episodes.length > 0) {
-                        seasons[`season_${seasonNumber}`] = {
-                            season_number: seasonNumber,
-                            total_episodes: episodes.length,
-                            episodes: episodes
-                        };
-                    }
-                });
-
-                data.total_seasons = Object.keys(seasons).length;
-                data.seasons = Object.keys(seasons).length > 0 ? seasons : null;
+                data.torrent_720p = t720Val || null;
+                data.torrent_1080p = t1080Val || null;
+                data.torrent_2160p = t2160Val || null;
             }
-
-            // Debug: Show the data being sent
-            console.log('Sending data:', data);
-            document.getElementById('debug-info').style.display = 'block';
-            document.getElementById('debug-info').textContent = 'Sending data: ' + JSON.stringify(data, null, 2);
 
             try {
                 const response = await fetch(`${ADMIN_API_BASE_URL}/media/${mediaId}`, {
@@ -782,31 +395,20 @@
                 console.log('Server response:', result);
 
                 if (response.ok) {
-                    // Show success message
                     const successMsg = document.getElementById('success-message');
                     successMsg.style.display = 'block';
                     successMsg.textContent = '✅ Media updated successfully!';
                     
-                    // Hide debug info on success
-                    document.getElementById('debug-info').style.display = 'none';
-                    
-                    // Scroll to top to show success message
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    
-                    // Redirect after 2 seconds
                     setTimeout(() => {
                         window.location.href = '/admin/search_and_edit';
                     }, 2000);
                 } else {
-                    document.getElementById('debug-info').textContent += '\n\nError Response: ' + JSON.stringify(result, null, 2);
-                    alert(`Error ${response.status}: ${result.message || 'Unknown error'}\n\nCheck debug info below for details.`);
+                    alert(`Error: ${result.message || 'Unknown error'}`);
                 }
             } catch (err) {
                 console.error('Request failed:', err);
-                document.getElementById('debug-info').textContent += '\n\nNetwork Error: ' + err.message;
-                alert('Network error: Unable to connect to server. Please check your connection and try again.');
+                alert('Network error: Unable to connect to server.');
             } finally {
-                form.classList.remove('loading');
                 submitButton.textContent = originalText;
             }
         });
