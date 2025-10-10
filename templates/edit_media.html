@@ -328,96 +328,79 @@
             dynamicFieldsContainer.innerHTML = '';
 
             if (media.type === 'movie') {
+                // Get video links
+                const video720 = media.video_links ? (media.video_links['720p'] || '') : '';
+                const video1080 = media.video_links ? (media.video_links['1080p'] || '') : '';
+                const video2160 = media.video_links ? (media.video_links['2160p'] || '') : '';
+                
+                // Get download links
+                const dl720 = media.download_links ? media.download_links['720p'] : null;
+                const dl1080 = media.download_links ? media.download_links['1080p'] : null;
+                const dl2160 = media.download_links ? media.download_links['2160p'] : null;
+                
+                const download720 = dl720 ? (typeof dl720 === 'object' ? dl720.url : dl720) : '';
+                const download1080 = dl1080 ? (typeof dl1080 === 'object' ? dl1080.url : dl1080) : '';
+                const download2160 = dl2160 ? (typeof dl2160 === 'object' ? dl2160.url : dl2160) : '';
+                
+                // Get torrent links
+                const torrent720 = media.torrent_links ? (media.torrent_links['720p'] || '') : '';
+                const torrent1080 = media.torrent_links ? (media.torrent_links['1080p'] || '') : '';
+                const torrent2160 = media.torrent_links ? (media.torrent_links['2160p'] || '') : '';
+                
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
                         <h2>🔗 Video Links</h2>
                         <div class="form-group">
                             <label for="video_720p">720p Video URL:</label>
-                            <input type="text" id="video_720p" name="video_720p" placeholder="https://example.com/video_720p.mp4">
+                            <input type="text" id="video_720p" name="video_720p" placeholder="https://example.com/video_720p.mp4" value="${video720}">
                         </div>
                         <div class="form-group">
                             <label for="video_1080p">1080p Video URL:</label>
-                            <input type="text" id="video_1080p" name="video_1080p" placeholder="https://example.com/video_1080p.mp4">
+                            <input type="text" id="video_1080p" name="video_1080p" placeholder="https://example.com/video_1080p.mp4" value="${video1080}">
                         </div>
                         <div class="form-group">
                             <label for="video_2160p">2160p Video URL:</label>
-                            <input type="text" id="video_2160p" name="video_2160p" placeholder="https://example.com/video_2160p.mp4">
+                            <input type="text" id="video_2160p" name="video_2160p" placeholder="https://example.com/video_2160p.mp4" value="${video2160}">
                         </div>
 
                         <h2>⬇️ Download Links</h2>
                         <div class="form-group">
                             <label for="download_720p">720p Download URL:</label>
-                            <input type="text" id="download_720p" name="download_720p" placeholder="https://example.com/download_720p.mp4">
+                            <input type="text" id="download_720p" name="download_720p" placeholder="https://example.com/download_720p.mp4" value="${download720}">
                         </div>
                         <div class="form-group">
                             <label for="download_1080p">1080p Download URL:</label>
-                            <input type="text" id="download_1080p" name="download_1080p" placeholder="https://example.com/download_1080p.mp4">
+                            <input type="text" id="download_1080p" name="download_1080p" placeholder="https://example.com/download_1080p.mp4" value="${download1080}">
                         </div>
                         <div class="form-group">
                             <label for="download_2160p">2160p Download URL:</label>
-                            <input type="text" id="download_2160p" name="download_2160p" placeholder="https://example.com/download_2160p.mp4">
+                            <input type="text" id="download_2160p" name="download_2160p" placeholder="https://example.com/download_2160p.mp4" value="${download2160}">
                         </div>
 
                         <h2>🧲 Torrent Links</h2>
                         <div class="form-group">
                             <label for="torrent_720p">720p Torrent URL:</label>
-                            <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:...">
+                            <input type="text" id="torrent_720p" name="torrent_720p" placeholder="magnet:?xt=urn:btih:..." value="${torrent720}">
                         </div>
                         <div class="form-group">
                             <label for="torrent_1080p">1080p Torrent URL:</label>
-                            <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:...">
+                            <input type="text" id="torrent_1080p" name="torrent_1080p" placeholder="magnet:?xt=urn:btih:..." value="${torrent1080}">
                         </div>
                         <div class="form-group">
                             <label for="torrent_2160p">2160p Torrent URL:</label>
-                            <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:...">
+                            <input type="text" id="torrent_2160p" name="torrent_2160p" placeholder="magnet:?xt=urn:btih:..." value="${torrent2160}">
                         </div>
                     </div>
                 `;
-
-                // Wait for DOM to update then populate movie links
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        console.log('Populating movie links with:', media.video_links, media.download_links, media.torrent_links);
-                        
-                        if (media.video_links) {
-                            const v720 = document.getElementById('video_720p');
-                            const v1080 = document.getElementById('video_1080p');
-                            const v2160 = document.getElementById('video_2160p');
-                            
-                            if (v720) v720.value = media.video_links['720p'] || '';
-                            if (v1080) v1080.value = media.video_links['1080p'] || '';
-                            if (v2160) v2160.value = media.video_links['2160p'] || '';
-                        }
-
-                        if (media.download_links) {
-                            const dl720 = media.download_links['720p'];
-                            const dl1080 = media.download_links['1080p'];
-                            const dl2160 = media.download_links['2160p'];
-                            
-                            const d720 = document.getElementById('download_720p');
-                            const d1080 = document.getElementById('download_1080p');
-                            const d2160 = document.getElementById('download_2160p');
-                            
-                            if (d720) d720.value = (typeof dl720 === 'object' && dl720 ? dl720.url : dl720) || '';
-                            if (d1080) d1080.value = (typeof dl1080 === 'object' && dl1080 ? dl1080.url : dl1080) || '';
-                            if (d2160) d2160.value = (typeof dl2160 === 'object' && dl2160 ? dl2160.url : dl2160) || '';
-                        }
-
-                        if (media.torrent_links) {
-                            const t720 = document.getElementById('torrent_720p');
-                            const t1080 = document.getElementById('torrent_1080p');
-                            const t2160 = document.getElementById('torrent_2160p');
-                            
-                            if (t720) t720.value = media.torrent_links['720p'] || '';
-                            if (t1080) t1080.value = media.torrent_links['1080p'] || '';
-                            if (t2160) t2160.value = media.torrent_links['2160p'] || '';
-                        }
-                        
-                        console.log('Movie links populated successfully');
-                    });
-                });
+                
+                console.log('Movie links populated directly in HTML');
 
             } else if (media.type === 'tv') {
+                // Get TV series video links
+                const tvVideo720 = media.video_links ? (media.video_links['720p'] || '') : '';
+                const tvVideo1080 = media.video_links ? (media.video_links['1080p'] || '') : '';
+                const tvVideo2160 = media.video_links ? (media.video_links['2160p'] || '') : '';
+                
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
                         <h2>TV Series Details</h2>
@@ -429,15 +412,15 @@
                         <h2>🔗 TV Series Video Links</h2>
                         <div class="form-group">
                             <label for="tv_video_720p">720p Video URL:</label>
-                            <input type="text" id="tv_video_720p" name="tv_video_720p" placeholder="https://example.com/series_720p/">
+                            <input type="text" id="tv_video_720p" name="tv_video_720p" placeholder="https://example.com/series_720p/" value="${tvVideo720}">
                         </div>
                         <div class="form-group">
                             <label for="tv_video_1080p">1080p Video URL:</label>
-                            <input type="text" id="tv_video_1080p" name="tv_video_1080p" placeholder="https://example.com/series_1080p/">
+                            <input type="text" id="tv_video_1080p" name="tv_video_1080p" placeholder="https://example.com/series_1080p/" value="${tvVideo1080}">
                         </div>
                         <div class="form-group">
                             <label for="tv_video_2160p">2160p Video URL:</label>
-                            <input type="text" id="tv_video_2160p" name="tv_video_2160p" placeholder="https://example.com/series_2160p/">
+                            <input type="text" id="tv_video_2160p" name="tv_video_2160p" placeholder="https://example.com/series_2160p/" value="${tvVideo2160}">
                         </div>
                         
                         <div id="seasons-container"></div>
@@ -445,39 +428,23 @@
                     </div>
                 `;
                 
-                // Wait for DOM to update then populate TV series video links
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
-                        console.log('Populating TV links with:', media.video_links);
-                        
-                        if (media.video_links) {
-                            const tv720 = document.getElementById('tv_video_720p');
-                            const tv1080 = document.getElementById('tv_video_1080p');
-                            const tv2160 = document.getElementById('tv_video_2160p');
-                            
-                            if (tv720) tv720.value = media.video_links['720p'] || '';
-                            if (tv1080) tv1080.value = media.video_links['1080p'] || '';
-                            if (tv2160) tv2160.value = media.video_links['2160p'] || '';
-                        }
-                        
-                        // Populate seasons
-                        if (media.seasons && typeof media.seasons === 'object') {
-                            const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
-                                const aNum = parseInt(a.split('_')[1]) || 0;
-                                const bNum = parseInt(b.split('_')[1]) || 0;
-                                return aNum - bNum;
-                            });
-                            seasonKeys.forEach(key => {
-                                const season = media.seasons[key];
-                                if (season) {
-                                    addSeason(season);
-                                }
-                            });
-                        }
-                        
-                        console.log('TV links populated successfully');
-                    });
-                });
+                // Populate seasons after a brief delay
+                setTimeout(() => {
+                    if (media.seasons && typeof media.seasons === 'object') {
+                        const seasonKeys = Object.keys(media.seasons).sort((a, b) => {
+                            const aNum = parseInt(a.split('_')[1]) || 0;
+                            const bNum = parseInt(b.split('_')[1]) || 0;
+                            return aNum - bNum;
+                        });
+                        seasonKeys.forEach(key => {
+                            const season = media.seasons[key];
+                            if (season) {
+                                addSeason(season);
+                            }
+                        });
+                    }
+                    console.log('TV links populated successfully');
+                }, 50);
             }
         }
 
