@@ -290,6 +290,56 @@
                 }
                 const media = await response.json();
                 console.log('Loaded media data:', media);
+                
+                // Parse JSON strings if needed
+                if (typeof media.video_links === 'string') {
+                    try {
+                        media.video_links = JSON.parse(media.video_links);
+                    } catch (e) {
+                        media.video_links = {};
+                    }
+                }
+                
+                if (typeof media.download_links === 'string') {
+                    try {
+                        media.download_links = JSON.parse(media.download_links);
+                    } catch (e) {
+                        media.download_links = {};
+                    }
+                }
+                
+                if (typeof media.torrent_links === 'string') {
+                    try {
+                        media.torrent_links = JSON.parse(media.torrent_links);
+                    } catch (e) {
+                        media.torrent_links = {};
+                    }
+                }
+                
+                if (typeof media.cast_members === 'string') {
+                    try {
+                        media.cast_members = JSON.parse(media.cast_members);
+                    } catch (e) {
+                        media.cast_members = [];
+                    }
+                }
+                
+                if (typeof media.genres === 'string') {
+                    try {
+                        media.genres = JSON.parse(media.genres);
+                    } catch (e) {
+                        media.genres = [];
+                    }
+                }
+                
+                if (typeof media.seasons === 'string') {
+                    try {
+                        media.seasons = JSON.parse(media.seasons);
+                    } catch (e) {
+                        media.seasons = null;
+                    }
+                }
+                
                 populateForm(media);
             } catch (err) {
                 console.error("Failed to load media:", err);
@@ -302,6 +352,9 @@
 
         function populateForm(media) {
             console.log('Populating form with:', media);
+            console.log('Video links:', media.video_links);
+            console.log('Download links:', media.download_links);
+            console.log('Torrent links:', media.torrent_links);
             
             // Basic fields
             document.getElementById('type').value = media.type || '';
@@ -328,24 +381,56 @@
             dynamicFieldsContainer.innerHTML = '';
 
             if (media.type === 'movie') {
-                // Get video links
-                const video720 = media.video_links ? (media.video_links['720p'] || '') : '';
-                const video1080 = media.video_links ? (media.video_links['1080p'] || '') : '';
-                const video2160 = media.video_links ? (media.video_links['2160p'] || '') : '';
+                // ===== FIXED: Extract video links - handle nested object structure for ALL resolutions =====
+                let video720 = '';
+                let video1080 = '';
+                let video2160 = '';
                 
-                // Get download links
-                const dl720 = media.download_links ? media.download_links['720p'] : null;
-                const dl1080 = media.download_links ? media.download_links['1080p'] : null;
-                const dl2160 = media.download_links ? media.download_links['2160p'] : null;
+                if (media.video_links && typeof media.video_links === 'object') {
+                    const v720 = media.video_links['video_720p'] || media.video_links['720p'];
+                    const v1080 = media.video_links['video_1080p'] || media.video_links['1080p'];
+                    const v2160 = media.video_links['video_2160p'] || media.video_links['2160p'];
+                    
+                    video720 = (v720 && typeof v720 === 'object' && v720.url) ? v720.url : (v720 || '');
+                    video1080 = (v1080 && typeof v1080 === 'object' && v1080.url) ? v1080.url : (v1080 || '');
+                    video2160 = (v2160 && typeof v2160 === 'object' && v2160.url) ? v2160.url : (v2160 || '');
+                }
                 
-                const download720 = dl720 ? (typeof dl720 === 'object' ? dl720.url : dl720) : '';
-                const download1080 = dl1080 ? (typeof dl1080 === 'object' ? dl1080.url : dl1080) : '';
-                const download2160 = dl2160 ? (typeof dl2160 === 'object' ? dl2160.url : dl2160) : '';
+                console.log('Extracted video links:', { video720, video1080, video2160 });
                 
-                // Get torrent links
-                const torrent720 = media.torrent_links ? (media.torrent_links['720p'] || '') : '';
-                const torrent1080 = media.torrent_links ? (media.torrent_links['1080p'] || '') : '';
-                const torrent2160 = media.torrent_links ? (media.torrent_links['2160p'] || '') : '';
+                // ===== FIXED: Extract download links - handle nested object structure for ALL resolutions =====
+                let download720 = '';
+                let download1080 = '';
+                let download2160 = '';
+                
+                if (media.download_links && typeof media.download_links === 'object') {
+                    const dl720 = media.download_links['download_720p'] || media.download_links['720p'];
+                    const dl1080 = media.download_links['download_1080p'] || media.download_links['1080p'];
+                    const dl2160 = media.download_links['download_2160p'] || media.download_links['2160p'];
+                    
+                    download720 = (dl720 && typeof dl720 === 'object' && dl720.url) ? dl720.url : (dl720 || '');
+                    download1080 = (dl1080 && typeof dl1080 === 'object' && dl1080.url) ? dl1080.url : (dl1080 || '');
+                    download2160 = (dl2160 && typeof dl2160 === 'object' && dl2160.url) ? dl2160.url : (dl2160 || '');
+                }
+                
+                console.log('Extracted download links:', { download720, download1080, download2160 });
+                
+                // ===== FIXED: Extract torrent links - handle nested object structure for ALL resolutions =====
+                let torrent720 = '';
+                let torrent1080 = '';
+                let torrent2160 = '';
+                
+                if (media.torrent_links && typeof media.torrent_links === 'object') {
+                    const t720 = media.torrent_links['torrent_720p'] || media.torrent_links['720p'];
+                    const t1080 = media.torrent_links['torrent_1080p'] || media.torrent_links['1080p'];
+                    const t2160 = media.torrent_links['torrent_2160p'] || media.torrent_links['2160p'];
+                    
+                    torrent720 = (t720 && typeof t720 === 'object' && t720.url) ? t720.url : (t720 || '');
+                    torrent1080 = (t1080 && typeof t1080 === 'object' && t1080.url) ? t1080.url : (t1080 || '');
+                    torrent2160 = (t2160 && typeof t2160 === 'object' && t2160.url) ? t2160.url : (t2160 || '');
+                }
+                
+                console.log('Extracted torrent links:', { torrent720, torrent1080, torrent2160 });
                 
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
@@ -393,13 +478,23 @@
                     </div>
                 `;
                 
-                console.log('Movie links populated directly in HTML');
+                console.log('Movie links populated successfully');
 
             } else if (media.type === 'tv') {
                 // Get TV series video links
-                const tvVideo720 = media.video_links ? (media.video_links['720p'] || '') : '';
-                const tvVideo1080 = media.video_links ? (media.video_links['1080p'] || '') : '';
-                const tvVideo2160 = media.video_links ? (media.video_links['2160p'] || '') : '';
+                let tvVideo720 = '';
+                let tvVideo1080 = '';
+                let tvVideo2160 = '';
+                
+                if (media.video_links && typeof media.video_links === 'object') {
+                    const v720 = media.video_links['video_720p'] || media.video_links['720p'];
+                    const v1080 = media.video_links['video_1080p'] || media.video_links['1080p'];
+                    const v2160 = media.video_links['video_2160p'] || media.video_links['2160p'];
+                    
+                    tvVideo720 = (v720 && typeof v720 === 'object' && v720.url) ? v720.url : (v720 || '');
+                    tvVideo1080 = (v1080 && typeof v1080 === 'object' && v1080.url) ? v1080.url : (v1080 || '');
+                    tvVideo2160 = (v2160 && typeof v2160 === 'object' && v2160.url) ? v2160.url : (v2160 || '');
+                }
                 
                 dynamicFieldsContainer.innerHTML = `
                     <div class="form-section">
@@ -485,6 +580,8 @@
             episodeDiv.classList.add('episode-row');
             
             const episodeName = episodeData ? (episodeData.episode_name || '') : '';
+            
+            // Extract video links
             const video720p = episodeData ? (episodeData.video_720p || '') : '';
             const video1080p = episodeData ? (episodeData.video_1080p || '') : '';
             const video2160p = episodeData ? (episodeData.video_2160p || '') : '';
@@ -499,11 +596,12 @@
                 const dl1080 = episodeData.download_1080p;
                 const dl2160 = episodeData.download_2160p;
                 
-                download720p = (typeof dl720 === 'object' && dl720 !== null) ? dl720.url : (dl720 || '');
-                download1080p = (typeof dl1080 === 'object' && dl1080 !== null) ? dl1080.url : (dl1080 || '');
-                download2160p = (typeof dl2160 === 'object' && dl2160 !== null) ? dl2160.url : (dl2160 || '');
+                download720p = (dl720 && typeof dl720 === 'object' && dl720.url) ? dl720.url : (dl720 || '');
+                download1080p = (dl1080 && typeof dl1080 === 'object' && dl1080.url) ? dl1080.url : (dl1080 || '');
+                download2160p = (dl2160 && typeof dl2160 === 'object' && dl2160.url) ? dl2160.url : (dl2160 || '');
             }
             
+            // Handle torrent links
             const torrent720p = episodeData ? (episodeData.torrent_720p || '') : '';
             const torrent1080p = episodeData ? (episodeData.torrent_1080p || '') : '';
             const torrent2160p = episodeData ? (episodeData.torrent_2160p || '') : '';
@@ -530,7 +628,7 @@
             }
         }
 
-        // Enhanced form submission with debugging
+        // Enhanced form submission with proper JSON structure
         document.getElementById('edit-media-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -567,17 +665,34 @@
                 cast_members: JSON.parse(form.cast_members.value || '[]')
             };
 
-            // Handle media type specific data
+            // ===== FIXED: Handle media type specific data with proper JSON structure =====
             if (mediaType === 'movie') {
-                data.video_720p = document.getElementById('video_720p').value.trim() || null;
-                data.video_1080p = document.getElementById('video_1080p').value.trim() || null;
-                data.video_2160p = document.getElementById('video_2160p').value.trim() || null;
-                data.download_720p = document.getElementById('download_720p').value.trim() || null;
-                data.download_1080p = document.getElementById('download_1080p').value.trim() || null;
-                data.download_2160p = document.getElementById('download_2160p').value.trim() || null;
-                data.torrent_720p = document.getElementById('torrent_720p').value.trim() || null;
-                data.torrent_1080p = document.getElementById('torrent_1080p').value.trim() || null;
-                data.torrent_2160p = document.getElementById('torrent_2160p').value.trim() || null;
+                // Save video links with the correct nested structure for ALL resolutions
+                const v720Val = document.getElementById('video_720p').value.trim();
+                const v1080Val = document.getElementById('video_1080p').value.trim();
+                const v2160Val = document.getElementById('video_2160p').value.trim();
+                
+                data.video_720p = v720Val ? { url: v720Val, file_type: fileType } : null;
+                data.video_1080p = v1080Val ? { url: v1080Val, file_type: fileType } : null;
+                data.video_2160p = v2160Val ? { url: v2160Val, file_type: fileType } : null;
+                
+                // Save download links with the correct nested structure for ALL resolutions
+                const dl720Val = document.getElementById('download_720p').value.trim();
+                const dl1080Val = document.getElementById('download_1080p').value.trim();
+                const dl2160Val = document.getElementById('download_2160p').value.trim();
+                
+                data.download_720p = dl720Val ? { url: dl720Val, file_type: fileType } : null;
+                data.download_1080p = dl1080Val ? { url: dl1080Val, file_type: fileType } : null;
+                data.download_2160p = dl2160Val ? { url: dl2160Val, file_type: fileType } : null;
+                
+                // Save torrent links with the correct nested structure for ALL resolutions
+                const t720Val = document.getElementById('torrent_720p').value.trim();
+                const t1080Val = document.getElementById('torrent_1080p').value.trim();
+                const t2160Val = document.getElementById('torrent_2160p').value.trim();
+                
+                data.torrent_720p = t720Val ? { url: t720Val, file_type: fileType } : null;
+                data.torrent_1080p = t1080Val ? { url: t1080Val, file_type: fileType } : null;
+                data.torrent_2160p = t2160Val ? { url: t2160Val, file_type: fileType } : null;
 
                 data.total_seasons = null;
                 data.seasons = null;
@@ -588,9 +703,9 @@
                 const tv1080 = document.getElementById('tv_video_1080p') ? document.getElementById('tv_video_1080p').value.trim() : null;
                 const tv2160 = document.getElementById('tv_video_2160p') ? document.getElementById('tv_video_2160p').value.trim() : null;
                 
-                data.video_720p = tv720 || null;
-                data.video_1080p = tv1080 || null;
-                data.video_2160p = tv2160 || null;
+                data.video_720p = tv720 ? { url: tv720, file_type: fileType } : null;
+                data.video_1080p = tv1080 ? { url: tv1080, file_type: fileType } : null;
+                data.video_2160p = tv2160 ? { url: tv2160, file_type: fileType } : null;
 
                 // Process seasons and episodes
                 const seasons = {};
@@ -606,22 +721,30 @@
                         const episodeName = row.querySelector(`input[placeholder="Episode Name"]`).value.trim();
                         
                         if (episodeName) {
+                            const v720Val = row.querySelector(`input[placeholder="720p Video Link"]`).value.trim();
+                            const v1080Val = row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim();
+                            const v2160Val = row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim();
+                            
                             const dl720Val = row.querySelector(`input[placeholder="720p Download Link"]`).value.trim();
                             const dl1080Val = row.querySelector(`input[placeholder="1080p Download Link"]`).value.trim();
                             const dl2160Val = row.querySelector(`input[placeholder="2160p Download Link"]`).value.trim();
                             
+                            const t720Val = row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim();
+                            const t1080Val = row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim();
+                            const t2160Val = row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim();
+                            
                             episodes.push({
                                 episode_number: episodeNumber,
                                 episode_name: episodeName,
-                                video_720p: row.querySelector(`input[placeholder="720p Video Link"]`).value.trim() || null,
+                                video_720p: v720Val || null,
                                 download_720p: dl720Val ? { url: dl720Val, file_type: fileType } : null,
-                                torrent_720p: row.querySelector(`input[placeholder="720p Torrent Link"]`).value.trim() || null,
-                                video_1080p: row.querySelector(`input[placeholder="1080p Video Link"]`).value.trim() || null,
+                                torrent_720p: t720Val || null,
+                                video_1080p: v1080Val || null,
                                 download_1080p: dl1080Val ? { url: dl1080Val, file_type: fileType } : null,
-                                torrent_1080p: row.querySelector(`input[placeholder="1080p Torrent Link"]`).value.trim() || null,
-                                video_2160p: row.querySelector(`input[placeholder="2160p Video Link"]`).value.trim() || null,
+                                torrent_1080p: t1080Val || null,
+                                video_2160p: v2160Val || null,
                                 download_2160p: dl2160Val ? { url: dl2160Val, file_type: fileType } : null,
-                                torrent_2160p: row.querySelector(`input[placeholder="2160p Torrent Link"]`).value.trim() || null
+                                torrent_2160p: t2160Val || null
                             });
                         }
                     });
