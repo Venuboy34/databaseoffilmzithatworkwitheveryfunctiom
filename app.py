@@ -84,9 +84,9 @@ def fetch_tmdb_data(tmdb_id, media_type):
             
             # Initialize empty video links for both movie and TV
             video_links = {
-                '720p': "",  # Empty placeholder for 720p
-                '1080p': "",  # Empty placeholder for 1080p
-                '2160p': ""   # Empty placeholder for 2160p
+                'video_720p': "",  # Empty placeholder for 720p
+                'video_1080p': "",  # Empty placeholder for 1080p
+                'video_2160p': ""   # Empty placeholder for 2160p
             }
 
             processed_data = {
@@ -100,7 +100,7 @@ def fetch_tmdb_data(tmdb_id, media_type):
                 'cast_members': cast,
                 'total_seasons': data.get('number_of_seasons') if media_type == 'tv' else None,
                 'genres': [g['name'] for g in data.get('genres', [])],
-                'video_links': video_links,  # Now includes 720p, 1080p and 2160p placeholders
+                'video_links': video_links,  # Now includes video_720p, video_1080p and video_2160p placeholders
                 'file_type': 'webrip'  # Default file type
             }
             
@@ -164,19 +164,26 @@ def prepare_media_data(data):
     elif genres is None:
         genres = []
     
-    # Process video links
+    # ===== FIXED: Process video links with correct keys =====
     video_links = {}
     if data.get('video_links'):
         video_links = safe_json_loads(data.get('video_links'), {})
     else:
-        # Handle individual video link fields
-        video_links = {
-            '720p': clean_value(data.get('video_720p')) or clean_value(data.get('tv_video_720p')),
-            '1080p': clean_value(data.get('video_1080p')) or clean_value(data.get('tv_video_1080p')),
-            '2160p': clean_value(data.get('video_2160p')) or clean_value(data.get('tv_video_2160p'))
-        }
+        # Handle individual video link fields - store with video_720p, video_1080p, video_2160p keys
+        file_type = data.get('file_type', 'webrip')
+        
+        video_720p = clean_value(data.get('video_720p')) or clean_value(data.get('tv_video_720p'))
+        video_1080p = clean_value(data.get('video_1080p')) or clean_value(data.get('tv_video_1080p'))
+        video_2160p = clean_value(data.get('video_2160p')) or clean_value(data.get('tv_video_2160p'))
+        
+        if video_720p:
+            video_links['video_720p'] = video_720p
+        if video_1080p:
+            video_links['video_1080p'] = video_1080p
+        if video_2160p:
+            video_links['video_2160p'] = video_2160p
     
-    # Process download links
+    # ===== FIXED: Process download links with correct keys (download_720p, download_1080p, download_2160p) =====
     download_links = {}
     if data.get('download_links'):
         download_links = safe_json_loads(data.get('download_links'), {})
@@ -188,24 +195,30 @@ def prepare_media_data(data):
         
         file_type = data.get('file_type', 'webrip')
         
+        # Store with download_720p, download_1080p, download_2160p keys to match your database
         if download_720p:
-            download_links['720p'] = {'url': download_720p, 'file_type': file_type}
+            download_links['download_720p'] = {'url': download_720p, 'file_type': file_type}
         if download_1080p:
-            download_links['1080p'] = {'url': download_1080p, 'file_type': file_type}
+            download_links['download_1080p'] = {'url': download_1080p, 'file_type': file_type}
         if download_2160p:
-            download_links['2160p'] = {'url': download_2160p, 'file_type': file_type}
+            download_links['download_2160p'] = {'url': download_2160p, 'file_type': file_type}
     
-    # Process torrent links
+    # ===== FIXED: Process torrent links with correct keys =====
     torrent_links = {}
     if data.get('torrent_links'):
         torrent_links = safe_json_loads(data.get('torrent_links'), {})
     else:
-        # Handle individual torrent link fields
-        torrent_links = {
-            '720p': clean_value(data.get('torrent_720p')),
-            '1080p': clean_value(data.get('torrent_1080p')),
-            '2160p': clean_value(data.get('torrent_2160p'))
-        }
+        # Handle individual torrent link fields - store with torrent_720p, torrent_1080p, torrent_2160p keys
+        torrent_720p = clean_value(data.get('torrent_720p'))
+        torrent_1080p = clean_value(data.get('torrent_1080p'))
+        torrent_2160p = clean_value(data.get('torrent_2160p'))
+        
+        if torrent_720p:
+            torrent_links['torrent_720p'] = torrent_720p
+        if torrent_1080p:
+            torrent_links['torrent_1080p'] = torrent_1080p
+        if torrent_2160p:
+            torrent_links['torrent_2160p'] = torrent_2160p
     
     # Handle rating - allow empty/null
     rating = data.get('rating')
@@ -536,15 +549,15 @@ def add_episode(media_id):
         episode_data = {
             'episode_number': data.get('episode_number'),
             'episode_name': data.get('episode_name'),
-            'video_720p': data.get('video_links', {}).get('720p'),
-            'video_1080p': data.get('video_links', {}).get('1080p'),
-            'video_2160p': data.get('video_links', {}).get('2160p'),
-            'download_720p': data.get('download_links', {}).get('720p'),
-            'download_1080p': data.get('download_links', {}).get('1080p'),
-            'download_2160p': data.get('download_links', {}).get('2160p'),
-            'torrent_720p': data.get('torrent_links', {}).get('720p'),
-            'torrent_1080p': data.get('torrent_links', {}).get('1080p'),
-            'torrent_2160p': data.get('torrent_links', {}).get('2160p')
+            'video_720p': data.get('video_links', {}).get('video_720p'),
+            'video_1080p': data.get('video_links', {}).get('video_1080p'),
+            'video_2160p': data.get('video_links', {}).get('video_2160p'),
+            'download_720p': data.get('download_links', {}).get('download_720p'),
+            'download_1080p': data.get('download_links', {}).get('download_1080p'),
+            'download_2160p': data.get('download_links', {}).get('download_2160p'),
+            'torrent_720p': data.get('torrent_links', {}).get('torrent_720p'),
+            'torrent_1080p': data.get('torrent_links', {}).get('torrent_1080p'),
+            'torrent_2160p': data.get('torrent_links', {}).get('torrent_2160p')
         }
         
         # Add episode to season
