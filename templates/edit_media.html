@@ -167,6 +167,12 @@
                     <input type="number" step="0.1" id="rating" name="rating" placeholder="7.5" min="0" max="10">
                 </div>
                 
+                <!-- NEW: Status Field for TV Series -->
+                <div class="form-group" id="status-field" style="display: none;">
+                    <label for="status">TV Series Status:</label>
+                    <input type="text" id="status" name="status" placeholder="e.g., Ongoing, Finished, Cancelled">
+                </div>
+                
                 <div class="form-group">
                     <label for="file_type">File Type:</label>
                     <select id="file_type" name="file_type">
@@ -297,6 +303,14 @@
             document.getElementById('language').value = media.language || '';
             document.getElementById('rating').value = media.rating || '';
             document.getElementById('file_type').value = media.file_type || 'webrip';
+            
+            // NEW: Show status field for TV series and populate it
+            if (media.type === 'tv') {
+                document.getElementById('status-field').style.display = 'block';
+                document.getElementById('status').value = media.status || '';
+            } else {
+                document.getElementById('status-field').style.display = 'none';
+            }
             
             // Genres
             document.getElementById('genres').value = (media.genres && Array.isArray(media.genres)) ? media.genres.join(', ') : '';
@@ -610,6 +624,11 @@
                 genres: form.genres.value.trim() ? form.genres.value.split(',').map(g => g.trim()) : [],
                 cast_members: JSON.parse(form.cast_members.value || '[]')
             };
+
+            // NEW: Add status field for TV series
+            if (mediaType === 'tv') {
+                data.status = document.getElementById('status').value.trim() || null;
+            }
 
             if (mediaType === 'movie') {
                 // Video links as direct URLs
