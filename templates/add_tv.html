@@ -57,6 +57,12 @@
                 <input type="number" step="0.1" id="rating" name="rating">
             </div>
             
+            <!-- NEW: TV Series Status Field -->
+            <div class="form-group">
+                <label for="status">TV Series Status:</label>
+                <input type="text" id="status" name="status" placeholder="e.g., Ongoing, Finished, Cancelled, Hiatus">
+            </div>
+            
             <!-- File Type Selection -->
             <div class="form-group">
                 <label for="file_type">File Type:</label>
@@ -207,6 +213,9 @@
             const video1080p = document.getElementById('video_1080p').value;
             const video2160p = document.getElementById('video_2160p').value;
 
+            // NEW: Get TV series status
+            const status = document.getElementById('status').value;
+
             for (let i = 1; i <= totalSeasons; i++) {
                 const episodes = [];
                 const episodeInputs = document.querySelectorAll(`.episode-container[data-season-number="${i}"] .episode-row`);
@@ -262,6 +271,7 @@
                 release_date: formData.get('release_date'),
                 language: formData.get('language'),
                 rating: parseFloat(formData.get('rating')),
+                status: status, // NEW: TV series status
                 file_type: fileType,
                 genres: genresArray,
                 cast_members: JSON.parse(formData.get('cast_members') || '[]'),
