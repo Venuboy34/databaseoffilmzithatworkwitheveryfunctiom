@@ -201,6 +201,23 @@ def prepare_media_data(data):
         if download_2160p:
             download_links['download_2160p'] = {'url': download_2160p, 'file_type': file_type}
     
+    # ===== Process TELEGRAM download links =====
+    telegram_links = {}
+    if data.get('telegram_links'):
+        telegram_links = safe_json_loads(data.get('telegram_links'), {})
+    else:
+        # Handle individual Telegram link fields
+        telegram_720p = clean_value(data.get('telegram_720p'))
+        telegram_1080p = clean_value(data.get('telegram_1080p'))
+        telegram_2160p = clean_value(data.get('telegram_2160p'))
+        
+        if telegram_720p:
+            telegram_links['telegram_720p'] = telegram_720p
+        if telegram_1080p:
+            telegram_links['telegram_1080p'] = telegram_1080p
+        if telegram_2160p:
+            telegram_links['telegram_2160p'] = telegram_2160p
+    
     # ===== Process torrent links =====
     torrent_links = {}
     if data.get('torrent_links'):
@@ -253,6 +270,7 @@ def prepare_media_data(data):
         'cast_members': safe_json_loads(data.get('cast_members'), []),
         'video_links': video_links,
         'download_links': download_links,
+        'telegram_links': telegram_links,  # NEW: Telegram download links
         'torrent_links': torrent_links,
         'total_seasons': total_seasons,
         'seasons': safe_json_loads(data.get('seasons')),
@@ -342,6 +360,7 @@ def get_all_media():
             media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
             media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
             media_dict['download_links'] = safe_json_loads(media_dict.get('download_links'), {})
+            media_dict['telegram_links'] = safe_json_loads(media_dict.get('telegram_links'), {})  # NEW: Telegram links
             media_dict['torrent_links'] = safe_json_loads(media_dict.get('torrent_links'), {})
             media_dict['seasons'] = safe_json_loads(media_dict.get('seasons'))
             media_dict['genres'] = safe_json_loads(media_dict.get('genres'), [])
@@ -372,6 +391,7 @@ def get_single_media(media_id):
             media_dict['cast_members'] = safe_json_loads(media_dict.get('cast_members'), [])
             media_dict['video_links'] = safe_json_loads(media_dict.get('video_links'), {})
             media_dict['download_links'] = safe_json_loads(media_dict.get('download_links'), {})
+            media_dict['telegram_links'] = safe_json_loads(media_dict.get('telegram_links'), {})  # NEW: Telegram links
             media_dict['torrent_links'] = safe_json_loads(media_dict.get('torrent_links'), {})
             media_dict['seasons'] = safe_json_loads(media_dict.get('seasons'))
             media_dict['genres'] = safe_json_loads(media_dict.get('genres'), [])
@@ -432,9 +452,9 @@ def add_media():
         cur = conn.cursor()
         cur.execute("""
             INSERT INTO media (type, title, description, thumbnail, backdrop, release_date, language, rating, 
-                              cast_members, video_links, download_links, torrent_links,
+                              cast_members, video_links, download_links, telegram_links, torrent_links,
                               total_seasons, seasons, genres, file_type)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
             media_data['type'], 
@@ -448,6 +468,7 @@ def add_media():
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
+            json.dumps(media_data['telegram_links']),  # NEW: Telegram links
             json.dumps(media_data['torrent_links']),
             media_data['total_seasons'], 
             json.dumps(media_data['seasons']), 
@@ -485,7 +506,7 @@ def update_media(media_id):
             UPDATE media SET
                 type = %s, title = %s, description = %s, thumbnail = %s, backdrop = %s, release_date = %s,
                 language = %s, rating = %s, cast_members = %s, video_links = %s, 
-                download_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s, file_type = %s
+                download_links = %s, telegram_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s, file_type = %s
             WHERE id = %s;
         """, (
             media_data['type'], 
@@ -499,6 +520,7 @@ def update_media(media_id):
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
+            json.dumps(media_data['telegram_links']),  # NEW: Telegram links
             json.dumps(media_data['torrent_links']),
             media_data['total_seasons'], 
             json.dumps(media_data['seasons']), 
@@ -553,6 +575,9 @@ def add_episode(media_id):
             'download_720p': data.get('download_links', {}).get('download_720p'),
             'download_1080p': data.get('download_links', {}).get('download_1080p'),
             'download_2160p': data.get('download_links', {}).get('download_2160p'),
+            'telegram_720p': data.get('telegram_links', {}).get('telegram_720p'),  # NEW: Telegram links
+            'telegram_1080p': data.get('telegram_links', {}).get('telegram_1080p'),  # NEW: Telegram links
+            'telegram_2160p': data.get('telegram_links', {}).get('telegram_2160p'),  # NEW: Telegram links
             'torrent_720p': data.get('torrent_links', {}).get('torrent_720p'),
             'torrent_1080p': data.get('torrent_links', {}).get('torrent_1080p'),
             'torrent_2160p': data.get('torrent_links', {}).get('torrent_2160p')
