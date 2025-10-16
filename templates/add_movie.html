@@ -14,6 +14,7 @@
         .tag-input-container { display: flex; flex-wrap: wrap; gap: 5px; background: #4a505b; padding: 5px; border-radius: 5px; border: 1px solid #555; }
         .tag { background: #6a11cb; color: #fff; padding: 5px 10px; border-radius: 15px; display: flex; align-items: center; }
         .tag-close { margin-left: 5px; cursor: pointer; font-weight: bold; }
+        h2 { color: #6a11cb; border-bottom: 2px solid #6a11cb; padding-bottom: 5px; margin-top: 30px; }
     </style>
 </head>
 <body>
@@ -106,6 +107,21 @@
             <div class="form-group">
                 <label for="download_2160p">Download 2160p URL:</label>
                 <input type="text" id="download_2160p" name="download_2160p">
+            </div>
+
+            <!-- NEW: Telegram Download Links Section -->
+            <h2>📱 Telegram Download Links</h2>
+            <div class="form-group">
+                <label for="telegram_720p">Telegram 720p URL:</label>
+                <input type="text" id="telegram_720p" name="telegram_720p" placeholder="https://t.me/...">
+            </div>
+            <div class="form-group">
+                <label for="telegram_1080p">Telegram 1080p URL:</label>
+                <input type="text" id="telegram_1080p" name="telegram_1080p" placeholder="https://t.me/...">
+            </div>
+            <div class="form-group">
+                <label for="telegram_2160p">Telegram 2160p URL:</label>
+                <input type="text" id="telegram_2160p" name="telegram_2160p" placeholder="https://t.me/...">
             </div>
 
             <h2>🧲 Torrent Links</h2>
@@ -205,6 +221,7 @@
                 genres: genres,
                 video_links: {},
                 download_links: {},
+                telegram_links: {},  // NEW: Telegram links object
                 torrent_links: {}
             };
 
@@ -228,6 +245,17 @@
             }
             if (form.download_2160p.value) {
                 data.download_links.download_2160p = { url: form.download_2160p.value, file_type: data.file_type };
+            }
+
+            // NEW: Collect Telegram download links
+            if (form.telegram_720p.value) {
+                data.telegram_links.telegram_720p = form.telegram_720p.value;
+            }
+            if (form.telegram_1080p.value) {
+                data.telegram_links.telegram_1080p = form.telegram_1080p.value;
+            }
+            if (form.telegram_2160p.value) {
+                data.telegram_links.telegram_2160p = form.telegram_2160p.value;
             }
 
             // Collect torrent links
