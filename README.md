@@ -19,3 +19,7 @@ CREATE TABLE media (
   genres JSON,
   file_type VARCHAR(20) DEFAULT 'webrip'
 );
+
+
+
+working 😔 💪 
