@@ -258,6 +258,9 @@ def prepare_media_data(data):
     # Handle file_type
     file_type = data.get('file_type', 'webrip')
     
+    # NEW: Handle status field for TV series
+    status = clean_value(data.get('status'))
+    
     prepared_data = {
         'type': data.get('type'),
         'title': clean_value(data.get('title', '')),
@@ -267,6 +270,7 @@ def prepare_media_data(data):
         'release_date': clean_value(data.get('release_date')),
         'language': clean_value(data.get('language')),
         'rating': rating,
+        'status': status,  # NEW: TV series status
         'cast_members': safe_json_loads(data.get('cast_members'), []),
         'video_links': video_links,
         'download_links': download_links,
@@ -451,10 +455,10 @@ def add_media():
         
         cur = conn.cursor()
         cur.execute("""
-            INSERT INTO media (type, title, description, thumbnail, backdrop, release_date, language, rating, 
+            INSERT INTO media (type, title, description, thumbnail, backdrop, release_date, language, rating, status,
                               cast_members, video_links, download_links, telegram_links, torrent_links,
                               total_seasons, seasons, genres, file_type)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id;
         """, (
             media_data['type'], 
@@ -465,6 +469,7 @@ def add_media():
             media_data['release_date'], 
             media_data['language'], 
             media_data['rating'],
+            media_data['status'],  # NEW: TV series status
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
@@ -505,7 +510,7 @@ def update_media(media_id):
         cur.execute("""
             UPDATE media SET
                 type = %s, title = %s, description = %s, thumbnail = %s, backdrop = %s, release_date = %s,
-                language = %s, rating = %s, cast_members = %s, video_links = %s, 
+                language = %s, rating = %s, status = %s, cast_members = %s, video_links = %s, 
                 download_links = %s, telegram_links = %s, torrent_links = %s, total_seasons = %s, seasons = %s, genres = %s, file_type = %s
             WHERE id = %s;
         """, (
@@ -517,6 +522,7 @@ def update_media(media_id):
             media_data['release_date'], 
             media_data['language'], 
             media_data['rating'],
+            media_data['status'],  # NEW: TV series status
             json.dumps(media_data['cast_members']), 
             json.dumps(media_data['video_links']), 
             json.dumps(media_data['download_links']),
